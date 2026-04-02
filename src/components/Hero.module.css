@@ -1,0 +1,55 @@
+.heroSection {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background-image: url('/hero-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 8, 8, 0.4) 0%,
+    rgba(10, 8, 8, 0.7) 60%,
+    var(--bg-dark) 100%
+  );
+  z-index: 1;
+}
+
+/* ── Scroll indicator ───────────────────── */
+
+.scrollIndicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.scrollInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.scrollText {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.scrollIcon {
+  color: var(--accent-light);
+}

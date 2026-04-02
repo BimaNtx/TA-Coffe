@@ -1,0 +1,89 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /* height is set inline from navbarHeight prop */
+  z-index: 90; /* logo (z:100) floats above */
+  border-bottom: 1px solid transparent;
+  /* No CSS transition — Framer Motion handles the glass effect */
+}
+
+.navContainer {
+  max-width: 1400px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 5%;
+
+  /* Three-column grid: 1fr | center gap | 1fr */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+/* ─── Left nav links ──────────────────────────── */
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+/* ─── Right nav links ─────────────────────────── */
+.navLinksRight {
+  justify-content: flex-end;
+}
+
+/* ─── Center gap (logo landing zone) ─────────────
+   Width must be wide enough for the scaled-down logo.
+   At scale 0.35, a ~240px wide double-line logo becomes ~84px wide.
+   Give it comfortable room: 180px.
+─────────────────────────────────────────────────── */
+.logoGap {
+  width: 180px;
+  height: 100%;
+}
+
+/* ─── Link styles ─────────────────────────────── */
+.link {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-primary);
+  opacity: 0.7;
+  transition: opacity 0.25s ease, color 0.25s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent-light);
+  transition: width 0.3s ease;
+}
+
+.link:hover {
+  opacity: 1;
+  color: var(--accent-light);
+}
+
+.link:hover::after {
+  width: 100%;
+}
+
+/* ─── Mobile ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .navLinks {
+    display: none;
+  }
+
+  .logoGap {
+    width: 120px;
+  }
+}

@@ -1,0 +1,179 @@
+.section {
+  position: relative;
+  width: 100%;
+  min-height: 75vh;
+  background-color: var(--bg-dark);
+  display: flex;
+  align-items: center;
+  padding: 60px 0;
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 5%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+/* ── Metadata accents ────────────────────────────────────────
+   Discreet technical data in the corners — the "studio data" look
+───────────────────────────────────────────────────────────── */
+
+.meta {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: 'Inter', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  opacity: 0.35;
+  line-height: 1.4;
+  z-index: 1;
+}
+
+.metaTL {
+  top: 28px;
+  left: 5%;
+}
+
+.metaTR {
+  top: 28px;
+  right: 5%;
+  text-align: right;
+}
+
+.metaBL {
+  bottom: 28px;
+  left: 5%;
+}
+
+.metaBR {
+  bottom: 28px;
+  right: 5%;
+  text-align: right;
+}
+
+/* ── Left column: flower + SVG line ──────────────────────── */
+
+.flowerCol {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flower {
+  width: clamp(220px, 28vw, 400px);
+  height: auto;
+  object-fit: contain;
+  will-change: transform;
+  filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.5));
+  position: relative;
+  z-index: 2;
+}
+
+/* ── SVG connector path ──────────────────────────────────── */
+
+.pathSvg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 200px;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* ── Right column: text ──────────────────────────────────── */
+
+.textCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.eyebrow {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--accent-light);
+  will-change: transform, opacity;
+}
+
+.heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.15;
+  color: var(--text-primary);
+  letter-spacing: 0.03em;
+  /* Allow child spans to stack */
+  display: flex;
+  flex-direction: column;
+}
+
+.headingLine {
+  display: block;
+  will-change: transform, opacity;
+}
+
+.body {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  max-width: 460px;
+  will-change: transform, opacity;
+}
+
+.divider {
+  width: 60px;
+  height: 1px;
+  background: var(--accent);
+  margin-top: 0.5rem;
+  will-change: transform, opacity;
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 48px;
+    text-align: center;
+  }
+
+  .textCol {
+    align-items: center;
+  }
+
+  .heading {
+    align-items: center;
+  }
+
+  .body {
+    max-width: 100%;
+  }
+
+  /* Hide corner metadata on mobile to keep it clean */
+  .meta {
+    display: none;
+  }
+
+  .pathSvg {
+    display: none;
+  }
+}

@@ -1,0 +1,62 @@
+.app-container {
+  position: relative;
+  width: 100%;
+}
+
+/* ── Logo anchor ─────────────────────────────────────────────────────
+   ONLY CSS lives here. Framer Motion must not touch this element.
+   left:50% + translateX(-50%) permanently locks horizontal center.
+   height:0 + overflow:visible means it takes no layout space.
+─────────────────────────────────────────────────────────────────── */
+.logo-anchor {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 0;
+  overflow: visible;
+  z-index: 100;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+}
+
+/* ── Inner motion div ────────────────────────────────────────────────
+   Framer Motion ONLY animates `y` and `scale` on this element.
+   transform-origin: center center ensures scale collapses symmetrically.
+─────────────────────────────────────────────────────────────────── */
+.logo-motion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transform-origin: center center;
+  /* GPU compositing for smooth, jank-free movement */
+  will-change: transform;
+  /* NO CSS transition here — Framer Motion owns the transform exclusively */
+}
+
+/* ── Text lines ──────────────────────────────────────────────────── */
+.logo-line {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: clamp(2.5rem, 7vw, 6.5rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  /* Tight so both lines feel like one mark when docked in navbar */
+  line-height: 0.95;
+  text-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.9),
+    0 2px 6px rgba(0, 0, 0, 0.6);
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .logo-line {
+    font-size: 13vw;
+  }
+}
