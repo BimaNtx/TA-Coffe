@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import IntroSection from './components/IntroSection';
 import BeanSection from './components/BeanSection';
+import ProductShowcase from './components/ProductShowcase';
 import Shop from './components/Shop';
 import './App.css';
 
@@ -73,6 +74,7 @@ function App() {
       <Hero />
       <IntroSection />
       <BeanSection />
+      <ProductShowcase />
       <Shop />
     </div>
   );
