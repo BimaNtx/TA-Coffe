@@ -4,9 +4,6 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import IntroSection from './components/IntroSection';
 import BeanSection from './components/BeanSection';
-import ProductShowcase from './components/ProductShowcase';
-import CraftSection from './components/CraftSection';
-import Shop from './components/Shop';
 import './App.css';
 
 const NAVBAR_HEIGHT = 80; // must match Navbar CSS
@@ -75,9 +72,6 @@ function App() {
       <Hero />
       <IntroSection />
       <BeanSection />
-      <ProductShowcase />
-      <CraftSection />
-      <Shop />
     </div>
   );
 }
