@@ -1,0 +1,221 @@
+/* ════════════════════════════════════════════════════════════
+   ProductCatalog.module.css
+   Styling untuk Section 4 — Product Catalog
+   Menggunakan CSS Modules agar nama kelas tidak bentrok.
+═══════════════════════════════════════════════════════════ */
+
+/* ── Section wrapper ─────────────────────────────────────── */
+
+.section {
+  width: 100%;
+  background-color: #000000;
+  padding: 6rem 5%;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent-light);
+}
+
+.title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+
+.subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.4);
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+/* ── Responsive grid ─────────────────────────────────────── */
+/*
+  Mobile  : 1 kolom
+  Tablet  : 2 kolom
+  Desktop : 3 kolom
+*/
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 580px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+}
+
+/* ── Kartu produk ────────────────────────────────────────── */
+
+.card {
+  background-color: #0d0d0d;       /* sedikit lebih terang dari hitam murni */
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  will-change: transform;          /* GPU acceleration untuk animasi hover */
+  cursor: default;
+}
+
+/* ── Area gambar ─────────────────────────────────────────── */
+
+.imageWrapper {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: #161616;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.image {
+  width: 60%;
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.8));
+  display: block;
+}
+
+/* ── Area teks info produk ───────────────────────────────── */
+
+.info {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 1; /* isi sisa tinggi kartu */
+}
+
+.origin {
+  font-family: 'Inter', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-light);
+  opacity: 0.85;
+}
+
+.name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+  font-weight: 600;
+  color: #f5f0eb;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.notes {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.description {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 0.2rem;
+}
+
+/* ── Baris harga & tombol ────────────────────────────────── */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 1rem;
+}
+
+.priceGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.weight {
+  font-family: 'Inter', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.25);
+  text-transform: uppercase;
+}
+
+/* ── Tombol pesan ────────────────────────────────────────── */
+
+.orderButton {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+
+  color: #000000;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.65rem 1.2rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.orderButton:hover {
+  background-color: var(--accent-light);
+  color: #000000;
+}
+
+.orderButton:active {
+  background-color: var(--accent);
+}

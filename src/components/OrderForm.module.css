@@ -1,0 +1,362 @@
+/* ════════════════════════════════════════════════════════════
+   OrderForm.module.css
+   Styling untuk Section 5 — Order Form
+═══════════════════════════════════════════════════════════ */
+
+/* ── Section wrapper ─────────────────────────────────────── */
+
+.section {
+  width: 100%;
+  background-color: #000000;
+  padding: 6rem 5%;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Two-column container ────────────────────────────────── */
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
+
+/* ── Left column ─────────────────────────────────────────── */
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 1rem;
+}
+
+.eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.8rem, 5vw, 4.5rem);
+  font-weight: 500;
+  color: #ffffff;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+}
+
+.subtext {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.productList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 1.5rem;
+}
+
+.productList li {
+  font-family: 'Inter', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Right column: form card ─────────────────────────────── */
+
+.rightCol {
+  background-color: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 2.5rem;
+}
+
+/* ── Form layout ─────────────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Labels ──────────────────────────────────────────────── */
+
+.label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.required {
+  color: rgba(255, 255, 255, 0.25);
+  margin-left: 0.2rem;
+}
+
+/* ── Inputs, select, textarea ────────────────────────────── */
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  color: #f5f0eb;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.18);
+}
+
+.input:focus {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.inputError {
+  border-color: rgba(220, 80, 80, 0.7);
+}
+
+/* Select-specific: custom arrow */
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+/* Select option colours (limited browser support — best effort) */
+.select option {
+  background-color: #1a1a1a;
+  color: #f5f0eb;
+}
+
+/* Textarea resize only vertically */
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+}
+
+/* ── Validation error message ────────────────────────────── */
+
+.errorMsg {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: rgba(220, 100, 100, 0.9);
+  margin-top: 0.1rem;
+}
+
+/* ── Dynamic item list ───────────────────────────────────── */
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Each item row: select (flex 3) + qty (flex 1) + remove btn */
+.itemRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Select takes most of the row width */
+.selectFlex {
+  flex: 3;
+  width: auto; /* override .input width:100% */
+}
+
+/* Quantity input: compact */
+.qtyInput {
+  flex: 1;
+  width: auto;
+  min-width: 56px;
+  text-align: center;
+  padding: 0.85rem 0.5rem;
+}
+
+/* Remove row button */
+.removeBtn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, color 0.2s;
+  line-height: 1;
+}
+
+.removeBtn:hover:not(:disabled) {
+  border-color: rgba(220, 80, 80, 0.5);
+  color: rgba(220, 80, 80, 0.8);
+}
+
+.removeBtn:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+/* "+ Tambah Kopi" dashed button */
+.addItemBtn {
+  margin-top: 0.4rem;
+  width: 100%;
+  padding: 0.7rem;
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.addItemBtn:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Order summary ───────────────────────────────────────── */
+
+.summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+}
+
+.summaryLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.summaryLabel strong {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.summaryPrice {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+/* ── Submit button ───────────────────────────────────────── */
+
+.submitButton {
+  width: 100%;
+  padding: 1rem;
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.submitButton:hover {
+  background-color: #f0ebe4;
+}
+
+.submitButton:active {
+  background-color: #e0dbd4;
+}
+
+/* ── Success state ───────────────────────────────────────── */
+
+.successBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+}
+
+.successIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.successTitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.03em;
+}
+
+.successText {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.4);
+  max-width: 300px;
+}

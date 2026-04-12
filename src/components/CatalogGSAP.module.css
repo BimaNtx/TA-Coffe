@@ -1,0 +1,276 @@
+/* ═══════════════════════════════════════════════════════
+   CATALOG GSAP — 50:50 Split-Screen with ScrollTrigger
+   Theme: Pure Black & White, Dark Elegant
+══════════════════════════════════════════════════════ */
+
+/* ── Section wrapper ─────────────────────────────────── */
+
+.section {
+  position: relative;
+  width: 100%;
+  background: #000000;
+  overflow: hidden;
+}
+
+/* ── Section header ──────────────────────────────────── */
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8rem 0 4rem;
+  text-align: center;
+}
+
+.eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 1.25rem;
+}
+
+.sectionTitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 300;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.headerRule {
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin-top: 2rem;
+}
+
+/* ── Split container ─────────────────────────────────── */
+
+.splitContainer {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ── LEFT column: sticky images ──────────────────────── */
+
+.leftCol {
+  position: relative;
+  width: 50%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* border-right for the thin vertical split line */
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.imageStack {
+  position: relative;
+  width: 72%;
+  height: 60%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* All images stacked on top of each other via position:absolute */
+.imageWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  will-change: transform, opacity;
+}
+
+.productImage {
+  max-width: 85%;
+  max-height: 85%;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.6));
+}
+
+.imageIndex {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 2.5rem;
+  font-family: 'Inter', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.15);
+  line-height: 1.8;
+}
+
+/* ── RIGHT column: scrolling text ────────────────────── */
+
+.rightCol {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Individual product text block ───────────────────── */
+
+.textBlock {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6rem clamp(2rem, 6%, 5rem);
+}
+
+.productNumber {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(5rem, 8vw, 8rem);
+  font-weight: 200;
+  color: rgba(255, 255, 255, 0.05);
+  line-height: 1;
+  margin-bottom: -0.8rem;
+  display: block;
+}
+
+.productSubtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 0.8rem;
+}
+
+.productTitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 3.5vw, 3.5rem);
+  font-weight: 400;
+  color: #ffffff;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.rule {
+  width: 32px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 2rem 0;
+}
+
+/* ── Metadata grid ───────────────────────────────────── */
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metaKey {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.metaVal {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.02em;
+}
+
+/* ── Tasting notes ───────────────────────────────────── */
+
+.notes {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+}
+
+/* ── Price row ───────────────────────────────────────── */
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.price {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+}
+
+.addBtn {
+  padding: 0.85rem 2.2rem;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.addBtn:hover {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+/* ── Mobile ──────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .splitContainer {
+    flex-direction: column;
+  }
+
+  .leftCol {
+    width: 100%;
+    height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .rightCol {
+    width: 100%;
+  }
+
+  .textBlock {
+    min-height: 80vh;
+    padding: 4rem 6%;
+  }
+
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .imageStack {
+    width: 60%;
+    height: 70%;
+  }
+}
