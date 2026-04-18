@@ -1,77 +1,74 @@
 /* ════════════════════════════════════════════════════════════
    ProductCatalog.module.css
-   Styling untuk Section 4 — Product Catalog
-   Menggunakan CSS Modules agar nama kelas tidak bentrok.
+   Penamaan class: deskriptif dan mudah dibaca siswa pemula
 ═══════════════════════════════════════════════════════════ */
 
 /* ── Section wrapper ─────────────────────────────────────── */
 
-.section {
+.catalogSection {
   width: 100%;
   background-color: #000000;
   padding: 6rem 5%;
 }
 
-/* ── Header ──────────────────────────────────────────────── */
+/* ── Header section ──────────────────────────────────────── */
 
-.header {
+.sectionHeader {
   text-align: center;
-  margin-bottom: 4rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 4rem;
 }
 
 .eyebrow {
   font-family: 'Inter', sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 500;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: var(--accent-light);
+  color: rgba(255, 255, 255, 0.35);
 }
 
-.title {
+.sectionTitle {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-size: clamp(2rem, 5vw, 3.8rem);
   font-weight: 600;
   color: #ffffff;
   letter-spacing: 0.04em;
   line-height: 1.1;
 }
 
-.subtitle {
+.sectionSubtitle {
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.4);
-  max-width: 480px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.38);
+  max-width: 460px;
   line-height: 1.7;
 }
 
-/* ── Responsive grid ─────────────────────────────────────── */
+/* ── Grid 3 kolom ────────────────────────────────────────── */
 /*
-  Mobile  : 1 kolom
-  Tablet  : 2 kolom
-  Desktop : 3 kolom
+  3 kolom di desktop → 2 kolom di tablet → 1 kolom di HP
 */
 
-.grid {
+.catalogGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
-  max-width: 1300px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
 @media (max-width: 900px) {
-  .grid {
+  .catalogGrid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 580px) {
-  .grid {
+@media (max-width: 560px) {
+  .catalogGrid {
     grid-template-columns: 1fr;
     gap: 1.2rem;
   }
@@ -79,96 +76,89 @@
 
 /* ── Kartu produk ────────────────────────────────────────── */
 
-.card {
-  background-color: #0d0d0d;       /* sedikit lebih terang dari hitam murni */
+.productCard {
+  display: flex;
+  flex-direction: column;
+  background-color: #0d0d0d;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 8px;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  will-change: transform;          /* GPU acceleration untuk animasi hover */
+  will-change: transform;     /* memberi tahu browser untuk menyiapkan GPU */
   cursor: default;
 }
 
-/* ── Area gambar ─────────────────────────────────────────── */
-
-.imageWrapper {
+/* Area foto */
+.cardImage {
   width: 100%;
   aspect-ratio: 4 / 3;
-  background-color: #161616;
+  background-color: #141414;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  overflow: hidden;
 }
 
-.image {
-  width: 60%;
-  max-width: 180px;
+.productImg {
+  width: 55%;
+  max-width: 160px;
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.8));
-  display: block;
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.75));
 }
 
-/* ── Area teks info produk ───────────────────────────────── */
-
-.info {
-  padding: 1.5rem;
+/* Area teks */
+.cardBody {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  flex: 1; /* isi sisa tinggi kartu */
+  padding: 1.5rem;
+  flex: 1;                    /* mengisi sisa tinggi kartu */
 }
 
-.origin {
+.originTag {
   font-family: 'Inter', monospace;
   font-size: 0.6rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--accent-light);
-  opacity: 0.85;
+  color: rgba(255, 255, 255, 0.28);
 }
 
-.name {
+.productName {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
   font-weight: 600;
   color: #f5f0eb;
   letter-spacing: 0.02em;
   line-height: 1.2;
 }
 
-.notes {
+.tastingNotes {
   font-family: 'Inter', sans-serif;
   font-size: 0.68rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.28);
 }
 
-.description {
+.productDesc {
   font-family: 'Inter', sans-serif;
   font-size: 0.82rem;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.45);
-  margin-top: 0.2rem;
+  color: rgba(255, 255, 255, 0.42);
 }
 
-/* ── Baris harga & tombol ────────────────────────────────── */
-
-.footer {
+/* Footer kartu: harga + tombol */
+.cardFooter {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
   margin-top: auto;
   padding-top: 1.2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  gap: 1rem;
 }
 
-.priceGroup {
+.priceBlock {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
@@ -179,43 +169,87 @@
   font-size: 1.2rem;
   font-weight: 600;
   color: #ffffff;
-  letter-spacing: 0.02em;
 }
 
 .weight {
   font-family: 'Inter', monospace;
   font-size: 0.6rem;
   letter-spacing: 0.15em;
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.22);
   text-transform: uppercase;
 }
 
-/* ── Tombol pesan ────────────────────────────────────────── */
-
-.orderButton {
+/* Tombol PESAN SEKARANG */
+.orderBtn {
   font-family: 'Inter', sans-serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  font-weight: 500;
-
   color: #000000;
   background-color: #ffffff;
   border: none;
   border-radius: 4px;
-  padding: 0.65rem 1.2rem;
+  padding: 0.65rem 1.15rem;
   cursor: pointer;
-  white-space: nowrap;
   flex-shrink: 0;
-
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
-.orderButton:hover {
-  background-color: var(--accent-light);
-  color: #000000;
+.orderBtn:hover {
+  background-color: #f0ebe4;
+  transform: translateY(-1px);
 }
 
-.orderButton:active {
-  background-color: var(--accent);
+.orderBtn:active {
+  transform: translateY(0);
+  background-color: #e0dbd4;
+}
+
+/* ── Tombol Lihat Semua Menu ─────────────────────────────── */
+
+.viewAllWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 3.5rem;
+}
+
+/*
+  Teknik "border reveal":
+  Tombol memiliki border putih tipis yang menjadi lebih terang saat hover.
+  Background tetap transparan agar terasa "bersih" dan premium.
+*/
+.viewAllBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.5);
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 100px;
+  padding: 1rem 2.5rem;
+
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.viewAllBtn:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.btnArrow {
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.viewAllBtn:hover .btnArrow {
+  transform: translate(2px, -2px);
 }

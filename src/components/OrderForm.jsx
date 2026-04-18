@@ -8,7 +8,7 @@
  *   4. AnimatePresence   — animasi swap form ↔ pesan sukses
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './OrderForm.module.css';
 
@@ -48,7 +48,12 @@ const SuccessMessage = () => (
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA
 // ─────────────────────────────────────────────────────────────
-const OrderForm = () => {
+/**
+ * @prop {string} defaultProductId — ID produk yang dipilih dari Section 4.
+ *   Saat nilainya berubah, baris pertama dropdown otomatis terisi.
+ *   Nilai default: '' (kosong = user belum memilih dari katalog).
+ */
+const OrderForm = ({ defaultProductId = '' }) => {
   // State untuk field nama dan catatan pengiriman
   const [name,  setName]  = useState('');
 
@@ -78,6 +83,29 @@ const OrderForm = () => {
   const [orderItems, setOrderItems] = useState([
     { productId: '', quantity: 1 },
   ]);
+
+  /**
+   * useEffect — Berjalan setiap kali prop `defaultProductId` berubah
+   *
+   * Alur data lengkapnya:
+   *   1. User klik "PESAN SEKARANG" di ProductCatalog
+   *   2. ProductCatalog memanggil onSelectProduct(productId) → App.jsx
+   *   3. App.jsx menyimpan ke state `selectedProduct`
+   *   4. App.jsx meneruskan ke OrderForm sebagai prop `defaultProductId`
+   *   5. useEffect di sini mendeteksi perubahan prop tsb
+   *   6. setOrderItems mengisi baris pertama dengan produk yang dipilih
+   */
+  useEffect(() => {
+    if (!defaultProductId) return; // abaikan jika kosong
+
+    setOrderItems(prev => {
+      // Buat salinan array agar tidak bermutasi langsung (immutable update)
+      const updated = [...prev];
+      // Update hanya baris pertama (index 0) dengan produk yang dipilih
+      updated[0] = { ...updated[0], productId: defaultProductId };
+      return updated;
+    });
+  }, [defaultProductId]); // efek ini hanya re-run jika defaultProductId berubah
 
   const [errors,      setErrors]      = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);

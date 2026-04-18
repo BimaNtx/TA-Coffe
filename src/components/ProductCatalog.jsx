@@ -1,202 +1,230 @@
 /**
  * ProductCatalog.jsx
  *
- * Section 4 — "Our Curated Beans"
- * Menampilkan daftar produk kopi dalam grid responsif.
+ * Section 4 — Katalog Produk "Our Curated Beans"
  *
- * Konsep React yang dipelajari di sini:
- *   1. Array.map()   — merender banyak elemen dari satu array data
- *   2. Props         — mengirim data dari komponen induk ke komponen anak
- *   3. whileInView   — animasi otomatis saat elemen masuk viewport
- *   4. key prop      — identitas unik setiap elemen dalam list
+ * ─────────────────────────────────────────────────────────────
+ * FITUR UTAMA:
+ *   1. Menampilkan 3 produk unggulan menggunakan .map()
+ *   2. Tombol "PESAN SEKARANG" → memanggil onSelectProduct()
+ *      lalu smooth-scroll otomatis ke Section 5 (Order Form)
+ *   3. Tombol "LIHAT SEMUA MENU" di bagian bawah
+ *
+ * PROPS:
+ *   @prop {function} onSelectProduct — fungsi dari App.jsx yang
+ *         dipanggil saat user memilih produk. Membawa productId
+ *         sebagai argumen, lalu App.jsx meneruskannya ke OrderForm.
+ * ─────────────────────────────────────────────────────────────
  */
 
 import { motion } from 'framer-motion';
 import styles from './ProductCatalog.module.css';
 
 // ─────────────────────────────────────────────────────────────
-// DATA PRODUK (lokal — siap diganti dengan fetch dari database)
+// DATA PRODUK
 //
-// Kenapa data dipisah ke konstanta di luar komponen?
-// Agar komponen tidak perlu "tahu" datanya — ia hanya bertugas
-// menampilkan data yang diberikan kepadanya. Prinsip ini disebut
-// "separation of concerns" (pemisahan tanggung jawab).
+// Setiap objek memiliki `id` yang SAMA persis dengan value
+// di <select> dropdown OrderForm.jsx.
+// Ini penting agar saat "PESAN SEKARANG" diklik, dropdown di
+// form langsung menampilkan produk yang benar.
 // ─────────────────────────────────────────────────────────────
 const products = [
   {
-    id: 1,                       // kunci unik untuk React
+    id:          'semeru-espresso',      // harus cocok dengan OrderForm PRODUCTS
     name:        'Semeru Espresso',
     origin:      'Lumajang, East Java',
     price:       'Rp 85.000',
     weight:      '200g',
-    description: 'Dark roast dengan karakter bold dan full body. Cocok untuk espresso shot maupun manual brew yang kuat.',
     notes:       'Dark Chocolate · Full Body · Bold',
+    description: 'Dark roast dengan karakter bold dan full body. Cocok untuk espresso shot maupun manual brew yang kuat.',
     image:       '/bag1.png',
   },
   {
-    id: 2,
+    id:          'mandheling-gayo',
     name:        'Mandheling Gayo',
     origin:      'Aceh Tengah, Sumatra',
     price:       'Rp 90.000',
     weight:      '200g',
-    description: 'Medium-dark roast dengan kompleksitas tinggi. Proses wet-hull menghasilkan karakter earthy yang khas Sumatra.',
     notes:       'Earthy · Cedar · Complex Spice',
+    description: 'Medium-dark roast dengan kompleksitas tinggi. Proses wet-hull menghasilkan karakter earthy khas Sumatra.',
     image:       '/bag2.png',
   },
   {
-    id: 3,
+    id:          'toraja-kalosi',
     name:        'Toraja Kalosi',
     origin:      'Tana Toraja, Sulawesi',
     price:       'Rp 95.000',
     weight:      '200g',
-    description: 'Medium roast yang smooth dan round. Natural process menghasilkan sweetness alami yang menonjol.',
     notes:       'Caramelized Sugar · Smooth · Nutty',
+    description: 'Medium roast yang smooth dan round. Natural process menghasilkan sweetness alami yang menonjol.',
     image:       '/bag1.png',
   },
 ];
 
 // ─────────────────────────────────────────────────────────────
-// KOMPONEN ProductCard — Kartu untuk satu produk
+// KOMPONEN: ProductCard
 //
-// Menerima dua props:
-//   `product` — satu objek dari array products di atas
-//   `index`   — posisi urutan (0, 1, 2) untuk menghitung jeda stagger
+// Satu kartu untuk satu produk.
+// Menerima props: `product` (data produk) dan `onSelect` (fungsi).
 // ─────────────────────────────────────────────────────────────
-const ProductCard = ({ product, index }) => (
-  <motion.article
-    className={styles.card}
+const ProductCard = ({ product, index, onSelect }) => {
 
-    /**
-     * initial — posisi/kondisi AWAL elemen sebelum animasi berjalan
-     * Elemen dimulai dari: tidak terlihat (opacity:0) dan 40px di bawah posisi asli (y:40)
-     */
-    initial={{ opacity: 0, y: 40 }}
+  /**
+   * handleOrder — fungsi yang berjalan saat tombol "PESAN SEKARANG" diklik
+   *
+   * Langkah 1: Panggil onSelect(product.id) → App.jsx menyimpan pilihan ini
+   *            dan meneruskannya ke OrderForm sebagai nilai awal dropdown.
+   *
+   * Langkah 2: Smooth-scroll ke elemen dengan id="order"
+   *            document.getElementById('order') mencari <section id="order">
+   *            di OrderForm.jsx. scrollIntoView membuat halaman bergerak halus.
+   */
+  const handleOrder = () => {
+    // Beritahu App.jsx produk mana yang dipilih
+    onSelect(product.id);
 
-    /**
-     * whileInView — posisi/kondisi TARGET saat elemen masuk ke viewport
-     * Elemen akan bergerak menuju: terlihat penuh (opacity:1) dan posisi normal (y:0)
-     *
-     * Jadi efeknya: kartu "muncul dari bawah" saat user scroll ke bagian ini.
-     */
-    whileInView={{ opacity: 1, y: 0 }}
+    // Tunggu sedikit agar state App.jsx sempat update,
+    // baru lakukan scroll (100ms biasanya cukup)
+    setTimeout(() => {
+      document.getElementById('order')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
 
-    /**
-     * viewport — mengatur kapan animasi whileInView dipicu
-     *
-     * once: true    → animasi hanya berjalan SEKALI (tidak berulang saat scroll balik)
-     * amount: 0.2   → animasi dipicu saat 20% elemen sudah terlihat di layar
-     *                 (tidak harus menunggu seluruh kartu terlihat)
-     */
-    viewport={{ once: true, amount: 0.2 }}
+  return (
+    <motion.article
+      className={styles.productCard}
 
-    /**
-     * transition — mengatur "bagaimana" animasi berjalan
-     *
-     * duration: 0.6    → animasi memakan waktu 0.6 detik
-     * delay: index * 0.12 → kartu ke-2 mulai 0.12 detik setelah kartu ke-1
-     *                        kartu ke-3 mulai 0.24 detik setelah kartu ke-1
-     *                        Ini menciptakan efek "stagger" (muncul berjenjang)
-     * ease: [0.22, 1, 0.36, 1] → kurva kecepatan kustom (cubic bezier)
-     *                             terasa: cepat di awal, melambat di akhir
-     */
-    transition={{
-      duration: 0.6,
-      delay: index * 0.12,
-      ease: [0.22, 1, 0.36, 1],
-    }}
+      /**
+       * Animasi masuk kartu:
+       * initial    = posisi awal (tak terlihat, 40px di bawah)
+       * whileInView = posisi target (terlihat penuh, posisi normal)
+       * viewport    = trigger: 20% kartu terlihat, hanya sekali
+       * transition  = delay berbeda per kartu → efek muncul berjenjang
+       */
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{
+        duration: 0.6,
+        delay: index * 0.12,        // kartu ke-2 terlambat 0.12 detik, dst.
+        ease: [0.22, 1, 0.36, 1],
+      }}
 
-    /**
-     * whileHover — animasi yang aktif saat mouse berada di atas elemen
-     * Kartu naik 6px saat di-hover, kembali ke posisi saat mouse pergi.
-     */
-    whileHover={{ y: -6, transition: { duration: 0.25, ease: 'easeOut' } }}
-  >
-    {/* Area gambar produk */}
-    <div className={styles.imageWrapper}>
-      <img
-        src={product.image}
-        alt={`Foto produk ${product.name}`}
-        className={styles.image}
-        loading="lazy"   // browser memuat gambar hanya jika/saat hampir terlihat
-      />
-    </div>
-
-    {/* Area teks informasi produk */}
-    <div className={styles.info}>
-      <span className={styles.origin}>{product.origin}</span>
-      <h3   className={styles.name}>{product.name}</h3>
-      <p    className={styles.notes}>{product.notes}</p>
-      <p    className={styles.description}>{product.description}</p>
-
-      {/* Baris harga dan tombol pesan */}
-      <div className={styles.footer}>
-        <div className={styles.priceGroup}>
-          <span className={styles.price}>{product.price}</span>
-          <span className={styles.weight}>{product.weight}</span>
-        </div>
-        <button
-          className={styles.orderButton}
-          aria-label={`Pesan ${product.name}`}
-          onClick={() => alert(`Memesan: ${product.name}`)}
-        >
-          Pesan Sekarang
-        </button>
+      // Animasi hover: kartu sedikit naik
+      whileHover={{ y: -6, transition: { duration: 0.25 } }}
+    >
+      {/* Area foto produk */}
+      <div className={styles.cardImage}>
+        <img
+          src={product.image}
+          alt={`Foto ${product.name}`}
+          className={styles.productImg}
+          loading="lazy"
+        />
       </div>
-    </div>
-  </motion.article>
-);
+
+      {/* Area informasi teks */}
+      <div className={styles.cardBody}>
+
+        {/* Label asal daerah */}
+        <span className={styles.originTag}>{product.origin}</span>
+
+        {/* Nama produk */}
+        <h3 className={styles.productName}>{product.name}</h3>
+
+        {/* Tasting notes (karakter rasa) */}
+        <p className={styles.tastingNotes}>{product.notes}</p>
+
+        {/* Deskripsi singkat */}
+        <p className={styles.productDesc}>{product.description}</p>
+
+        {/* Baris bawah: harga + tombol */}
+        <div className={styles.cardFooter}>
+          <div className={styles.priceBlock}>
+            <span className={styles.price}>{product.price}</span>
+            <span className={styles.weight}>{product.weight}</span>
+          </div>
+
+          {/*
+            Tombol PESAN SEKARANG
+            onClick memanggil handleOrder() yang sudah didefinisikan di atas.
+            aria-label membantu screen reader membaca tombol dengan konteks yang benar.
+          */}
+          <button
+            className={styles.orderBtn}
+            onClick={handleOrder}
+            aria-label={`Pesan ${product.name}`}
+          >
+            Pesan Sekarang
+          </button>
+        </div>
+
+      </div>
+    </motion.article>
+  );
+};
 
 // ─────────────────────────────────────────────────────────────
-// KOMPONEN UTAMA ProductCatalog — Section pembungkus
+// KOMPONEN UTAMA: ProductCatalog
 // ─────────────────────────────────────────────────────────────
-const ProductCatalog = () => (
-  <section className={styles.section} id="shop">
+const ProductCatalog = ({ onSelectProduct }) => (
+  <section className={styles.catalogSection} id="shop">
 
-    {/* Judul section — muncul dari bawah saat masuk viewport */}
+    {/* ── Judul Section ──────────────────────────────── */}
     <motion.div
-      className={styles.header}
+      className={styles.sectionHeader}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.5 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
     >
       <span className={styles.eyebrow}>Single Origin Collection</span>
-      <h2   className={styles.title}>Our Curated Beans</h2>
-      <p    className={styles.subtitle}>
+      <h2 className={styles.sectionTitle}>Our Curated Beans</h2>
+      <p className={styles.sectionSubtitle}>
         Dipilih langsung dari petani terpercaya di seluruh kepulauan Indonesia.
       </p>
     </motion.div>
 
     {/*
-      Grid produk — dirender menggunakan map()
-      ─────────────────────────────────────────
-      Kenapa map() dan bukan menulis kartu satu per satu?
+      ── Grid Produk ────────────────────────────────────
+      .map() menghasilkan satu <ProductCard> per produk.
 
-      Tanpa map() (cara manual, tidak efisien):
-        <ProductCard product={products[0]} index={0} />
-        <ProductCard product={products[1]} index={1} />
-        <ProductCard product={products[2]} index={2} />
+      Kenapa tidak tulis manual?
+        Jika data berubah (misalnya dari database), kode ini
+        otomatis menyesuaikan tanpa perlu diubah sama sekali.
 
-      Dengan map() (cara React, otomatis dan scalable):
-        products.map((product, index) => <ProductCard ... />)
-
-      Keuntungan map():
-        1. Jika data bertambah menjadi 10 produk, kode tidak perlu diubah
-        2. Jika nanti data dari database, bisa langsung di-map juga
-        3. Kode lebih singkat dan mudah dibaca
-
-      `key={product.id}` WAJIB ada di elemen paling luar loop.
-      Ini membantu React melacak perubahan list dengan efisien.
+      `key={product.id}` → identitas unik wajib untuk setiap
+      elemen dalam .map() agar React bisa melacak perubahan.
     */}
-    <div className={styles.grid}>
+    <div className={styles.catalogGrid}>
       {products.map((product, index) => (
         <ProductCard
-          key={product.id}    // identitas unik — gunakan ID, bukan index
-          product={product}   // kirim seluruh objek produk sebagai prop
-          index={index}       // kirim posisi urutan untuk delay stagger
+          key={product.id}
+          product={product}
+          index={index}
+          onSelect={onSelectProduct}   // teruskan prop dari App.jsx ke kartu
         />
       ))}
     </div>
+
+    {/* ── Tombol Lihat Semua Menu ─────────────────────── */}
+    <motion.div
+      className={styles.viewAllWrap}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.5 }}
+      transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <a
+        href="/menu.pdf"           // ganti dengan link PDF menu yang sesungguhnya
+        target="_blank"
+        rel="noreferrer"
+        className={styles.viewAllBtn}
+      >
+        <span>Lihat Semua Menu</span>
+        <span className={styles.btnArrow}>↗</span>
+      </a>
+    </motion.div>
 
   </section>
 );

@@ -2,13 +2,19 @@
  * App.jsx — Root komponen BIMA COFFEE Landing Page
  *
  * Urutan section:
- *   1. Navbar      — navigasi tetap di atas
- *   2. Hero        — halaman pembuka dengan logo animasi
- *   3. IntroSection— pengenalan brand dengan bunga kopi
- *   4. BeanSection — biji kopi berputar
- *   5. ProductCatalog — daftar produk dalam grid
- *   6. OrderForm   — formulir pemesanan multi-produk
- *   7. Footer      — penutup dengan brand besar
+ *   1. Navbar         — navigasi tetap di atas
+ *   2. Hero           — halaman pembuka dengan logo animasi
+ *   3. IntroSection   — pengenalan brand dengan bunga kopi
+ *   4. BeanSection    — biji kopi berputar
+ *   5. ProductCatalog — katalog produk; klik "Pesan" → isi form otomatis
+ *   6. OrderForm      — formulir pemesanan; menerima pilihan dari katalog
+ *   7. Footer         — penutup dengan brand besar
+ *
+ * ALUR DATA (Prop Drilling):
+ *   App.jsx menyimpan `selectedProduct` (string ID produk).
+ *   ProductCatalog → App (lewat onSelectProduct) → OrderForm (lewat defaultProductId)
+ *   Ini contoh nyata "state lifting" — state dinaikkan ke komponen terdekat
+ *   yang menjadi induk dari dua komponen yang perlu berbagi data.
  */
 
 import { useRef, useLayoutEffect, useState } from 'react';
@@ -34,6 +40,20 @@ const SPRING        = { stiffness: 400, damping: 40, mass: 1, restDelta: 0.001 }
 function App() {
   const logoRef      = useRef(null);
   const { scrollY } = useScroll();
+
+  /**
+   * selectedProduct — STATE BERSAMA antara Catalog dan Order Form
+   *
+   * Mengapa state ini ada di App.jsx, bukan di ProductCatalog atau OrderForm?
+   * Karena kedua komponen tersebut adalah SAUDARA (sibling) — mereka tidak
+   * bisa langsung berbagi data satu sama lain.
+   *
+   * Solusinya: "State Lifting" (angkat state ke komponen induk = App.jsx)
+   * App.jsx menjadi perantara:
+   *   • ProductCatalog SET nilainya lewat callback `onSelectProduct`
+   *   • OrderForm READ nilainya lewat prop `defaultProductId`
+   */
+  const [selectedProduct, setSelectedProduct] = useState('');
 
   // Posisi awal & akhir logo (diukur setelah render pertama)
   const [yStart, setYStart] = useState(-200);
@@ -88,8 +108,21 @@ function App() {
       <Hero />
       <IntroSection />
       <BeanSection />
-      <ProductCatalog />
-      <OrderForm />
+
+      {/*
+        onSelectProduct: fungsi yang diberikan ke ProductCatalog.
+        Saat user klik "PESAN SEKARANG", ProductCatalog memanggil
+        fungsi ini dengan ID produk yang dipilih.
+        App.jsx menyimpannya di state `selectedProduct`.
+      */}
+      <ProductCatalog onSelectProduct={setSelectedProduct} />
+
+      {/*
+        defaultProductId: nilai dari `selectedProduct` diteruskan ke OrderForm.
+        Saat nilainya berubah, useEffect di dalam OrderForm akan otomatis
+        mengisi dropdown baris pertama dengan produk yang dipilih.
+      */}
+      <OrderForm defaultProductId={selectedProduct} />
       <Footer />
     </div>
   );
