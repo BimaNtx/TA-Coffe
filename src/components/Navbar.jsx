@@ -92,8 +92,8 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
 
         {/* Link kiri */}
         <div className={styles.navLinks}>
-          <a href="#shop"  className={styles.link}>Shop</a>
-          <a href="#menu"  className={styles.link}>Menu</a>
+          <a href="#order"   className={styles.link}>Shop</a>
+          <a href="#catalog" className={styles.link}>Menu</a>
         </div>
 
         {/*

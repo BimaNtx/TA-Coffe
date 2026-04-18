@@ -1,14 +1,16 @@
 /**
- * OrderForm.jsx — Multi-Product Order
+ * OrderForm.jsx — Multi-Product Order Form
  *
  * Konsep React yang digunakan (untuk laporan RPL):
- *   1. useState          — menyimpan state form dan array item
+ *   1. useState          — menyimpan state form, array item, dan modal
  *   2. Array.map()       — merender setiap baris item secara dinamis
  *   3. Immutable update  — mengupdate array tanpa mutasi langsung
  *   4. AnimatePresence   — animasi swap form ↔ pesan sukses
+ *   5. Validasi form     — mencegah data yang tidak lengkap terkirim
+ *   6. Modal konfirmasi  — menampilkan ringkasan sebelum data dikirim
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './OrderForm.module.css';
 
@@ -21,12 +23,11 @@ const PRODUCTS = [
   { id: 'toraja-kalosi',   name: 'Toraja Kalosi',    price: 95000 },
 ];
 
-// Helper: format angka ke format Rupiah
-const formatRupiah = (num) =>
-  'Rp ' + num.toLocaleString('id-ID');
+// Helper: format angka ke format Rupiah — contoh: 85000 → "Rp 85.000"
+const formatRupiah = (num) => 'Rp ' + num.toLocaleString('id-ID');
 
 // ─────────────────────────────────────────────────────────────
-// PESAN SUKSES
+// PESAN SUKSES — ditampilkan setelah pesanan berhasil dikonfirmasi
 // ─────────────────────────────────────────────────────────────
 const SuccessMessage = () => (
   <motion.div
@@ -49,172 +50,206 @@ const SuccessMessage = () => (
 // KOMPONEN UTAMA
 // ─────────────────────────────────────────────────────────────
 /**
- * @prop {string} defaultProductId — ID produk yang dipilih dari Section 4.
- *   Saat nilainya berubah, baris pertama dropdown otomatis terisi.
- *   Nilai default: '' (kosong = user belum memilih dari katalog).
+ * Props yang diterima dari App.jsx:
+ *   @prop {Array}    orderItems    — array baris pesanan (state dari App.jsx)
+ *   @prop {function} setOrderItems — fungsi updater untuk mengubah array tsb
+ *
+ * Kenapa tidak ada useState untuk orderItems di sini?
+ * Karena state-nya sudah "diangkat" ke App.jsx (state lifting) agar
+ * ProductCatalog dan OrderForm bisa berbagi data yang sama.
  */
-const OrderForm = ({ defaultProductId = '' }) => {
-  // State untuk field nama dan catatan pengiriman
+const OrderForm = ({ orderItems, setOrderItems }) => {
+  // State lokal: hanya dibutuhkan oleh form ini, tidak dibagikan ke komponen lain
   const [name,  setName]  = useState('');
 
   /**
    * STATE: phone
-   *
    * Menyimpan nomor WhatsApp pelanggan.
    * Catatan database: field ini akan digunakan sebagai identifikasi
    * pelanggan (foreign key) saat diintegrasikan ke tabel `customers`.
    */
   const [phone, setPhone] = useState('');
-
   const [notes, setNotes] = useState('');
 
-  /**
-   * STATE UTAMA: orderItems
-   *
-   * Berupa ARRAY of objects. Setiap objek = satu baris item.
-   * Contoh isi state saat ada 2 item:
-   *   [
-   *     { productId: 'semeru-espresso', quantity: 2 },
-   *     { productId: 'toraja-kalosi',   quantity: 1 },
-   *   ]
-   *
-   * Dimulai dengan satu baris kosong agar form tidak tampak hampa.
-   */
-  const [orderItems, setOrderItems] = useState([
-    { productId: '', quantity: 1 },
-  ]);
-
-  /**
-   * useEffect — Berjalan setiap kali prop `defaultProductId` berubah
-   *
-   * Alur data lengkapnya:
-   *   1. User klik "PESAN SEKARANG" di ProductCatalog
-   *   2. ProductCatalog memanggil onSelectProduct(productId) → App.jsx
-   *   3. App.jsx menyimpan ke state `selectedProduct`
-   *   4. App.jsx meneruskan ke OrderForm sebagai prop `defaultProductId`
-   *   5. useEffect di sini mendeteksi perubahan prop tsb
-   *   6. setOrderItems mengisi baris pertama dengan produk yang dipilih
-   */
-  useEffect(() => {
-    if (!defaultProductId) return; // abaikan jika kosong
-
-    setOrderItems(prev => {
-      // Buat salinan array agar tidak bermutasi langsung (immutable update)
-      const updated = [...prev];
-      // Update hanya baris pertama (index 0) dengan produk yang dipilih
-      updated[0] = { ...updated[0], productId: defaultProductId };
-      return updated;
-    });
-  }, [defaultProductId]); // efek ini hanya re-run jika defaultProductId berubah
-
+  // State error: menyimpan pesan error per field { name: '...', phone: '...', ... }
   const [errors,      setErrors]      = useState({});
+
+  // State tampilan: apakah form sudah berhasil disubmit?
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // ── Fungsi untuk menambah baris item baru ─────────────────
   /**
-   * addItem
-   * Menambahkan objek baris baru ke array orderItems.
+   * isConfirmModalOpen — mengontrol tampil/tidaknya Modal Konfirmasi
    *
-   * PENTING: Kita menggunakan spread operator [...prev, newRow]
-   * bukan push(). Ini karena React butuh reference baru
-   * agar bisa mendeteksi perubahan state.
+   * Alur:
+   *   false (default) → form tampil biasa
+   *   true            → Modal Ringkasan Pesanan muncul di atas form
+   *
+   * Diubah ke true saat SEMUA validasi berhasil dilewati di handleSubmit.
+   * Diubah ke false saat user klik "KEMBALI / EDIT" di dalam modal.
+   */
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  // ─────────────────────────────────────────────────────────────
+  // FUNGSI MANIPULASI ARRAY orderItems
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * addItem — menambah baris pesanan baru
+   * Menggunakan spread [...prev, item] bukan push() karena React
+   * butuh reference array baru untuk mendeteksi perubahan state.
    */
   const addItem = () => {
     setOrderItems(prev => [...prev, { productId: '', quantity: 1 }]);
   };
 
-  // ── Fungsi untuk menghapus baris item ─────────────────────
   /**
-   * removeItem
-   * Menghapus baris pada index tertentu dari array.
-   *
+   * removeItem — menghapus baris pada index tertentu
    * filter() membuat array baru yang hanya berisi elemen
    * yang index-nya BUKAN index yang ingin dihapus.
-   *
-   * @param {number} indexToRemove - index baris yang dihapus
    */
   const removeItem = (indexToRemove) => {
-    setOrderItems(prev =>
-      prev.filter((_, index) => index !== indexToRemove)
-    );
+    setOrderItems(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
-  // ── Fungsi untuk mengupdate nilai dalam satu baris ────────
   /**
-   * updateItem
-   * Mengubah satu field (productId atau quantity) pada baris tertentu.
+   * updateItem — mengubah satu field pada satu baris
    *
-   * Cara kerjanya (immutable update pattern):
-   *   1. map() menelusuri setiap elemen array
-   *   2. Jika index elemen SAMA dengan index yang ingin diubah,
-   *      buat objek baru: { ...item, [field]: value }
-   *   3. Jika bukan index yang dimaksud, kembalikan item apa adanya
+   * Immutable update pattern:
+   *   map() menelusuri array → item di index yang dituju dibuat ulang
+   *   dengan nilai baru, item lain dikembalikan apa adanya.
    *
-   * Ini adalah cara "React-friendly" mengupdate array of objects.
-   *
-   * @param {number} index  - index baris yang diubah
-   * @param {string} field  - nama property ('productId' atau 'quantity')
-   * @param {any}    value  - nilai baru
+   * @param {number} index - index baris yang diubah
+   * @param {string} field - nama field ('productId' atau 'quantity')
+   * @param {any}    value - nilai baru
    */
   const updateItem = (index, field, value) => {
     setOrderItems(prev =>
       prev.map((item, i) =>
         i === index
-          ? { ...item, [field]: value }  // baris yang diubah: buat objek baru
+          ? { ...item, [field]: value }  // buat objek baru dengan nilai terupdate
           : item                          // baris lain: biarkan apa adanya
       )
     );
   };
 
-  // ── Hitung total item & total harga ───────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // KALKULASI
+  // ─────────────────────────────────────────────────────────────
+
+  // isMaxItems: apakah semua varian produk sudah ada di baris pesanan?
+  const isMaxItems = orderItems.length >= PRODUCTS.length;
+
   /**
-   * totalQuantity
-   * Menjumlahkan semua quantity menggunakan reduce().
-   * reduce() seperti "akumulator" — mulai dari 0, tambah setiap quantity.
+   * filledItems — hanya baris yang sudah dipilih kopinya
+   * filter() membuang baris dengan productId kosong ('')
+   * agar baris kosong tidak ikut dihitung di totalQuantity & totalPrice.
    */
-  const totalQuantity = orderItems.reduce(
+  const filledItems = orderItems.filter(item => item.productId !== '');
+
+  // totalQuantity — jumlah semua item dari baris yang sudah terisi
+  const totalQuantity = filledItems.reduce(
     (sum, item) => sum + Number(item.quantity), 0
   );
 
-  /**
-   * totalPrice
-   * Menghitung total harga dengan mencari harga produk berdasarkan ID,
-   * lalu mengalikan dengan quantity setiap baris.
-   */
-  const totalPrice = orderItems.reduce((sum, item) => {
+  // totalPrice — total harga: cari harga per produk, kalikan quantity, lalu jumlahkan
+  const totalPrice = filledItems.reduce((sum, item) => {
     const product = PRODUCTS.find(p => p.id === item.productId);
     return sum + (product ? product.price * Number(item.quantity) : 0);
   }, 0);
 
-  // ── Validasi ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // VALIDASI
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * validate — memeriksa semua field wajib sebelum submit
+   * Mengembalikan objek berisi pesan error untuk setiap field.
+   * Jika objek kosong {}, berarti semua validasi lolos.
+   */
   const validate = () => {
     const newErrors = {};
     if (!name.trim())  newErrors.name  = 'Nama wajib diisi.';
     if (!phone.trim()) newErrors.phone = 'Nomor WhatsApp wajib diisi.';
+    // Alamat wajib diisi agar barista tahu ke mana mengirim pesanan
+    if (!notes.trim()) newErrors.notes = 'Alamat pengiriman wajib diisi.';
     const hasEmpty = orderItems.some(item => !item.productId);
     if (hasEmpty) newErrors.items = 'Pilih kopi untuk semua baris.';
     return newErrors;
   };
 
-  // ── Submit ────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // SUBMIT — 2 tahap: validasi dulu, lalu tampilkan modal konfirmasi
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * handleSubmit — dipanggil saat tombol "Confirm Order" diklik
+   *
+   * Tahap 1: Jalankan validasi. Jika ada error, tampilkan dan berhenti.
+   * Tahap 2: Saring baris kosong. Jika tidak ada kopi, alert dan berhenti.
+   * Tahap 3: Semua lolos → tampilkan Modal Konfirmasi (BUKAN langsung submit).
+   *
+   * Kenapa tidak langsung submit?
+   * Agar user bisa memeriksa ringkasan pesanannya sekali lagi
+   * sebelum data benar-benar dikirim ke database.
+   */
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Jalankan semua pengecekan validasi
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      return; // hentikan jika ada field yang belum diisi
+    }
+
+    // Saring baris kosong yang lupa dipilih kopi
+    const validItems = filledItems; // sudah dihitung di atas
+    if (validItems.length === 0) {
+      alert('Pilih minimal satu kopi terlebih dahulu!');
       return;
     }
 
-    // Data siap dikirim ke API / database
-    const orderPayload = { name, phone, notes, items: orderItems, totalPrice };
-    console.log('Data pesanan:', orderPayload);
+    // Semua lolos → buka Modal Konfirmasi
+    setIsConfirmModalOpen(true);
+  };
+
+  /**
+   * processFinalOrder — dipanggil saat user klik "KONFIRMASI & PESAN" di modal
+   *
+   * Ini adalah tahap akhir: data benar-benar diproses/dikirim.
+   * Saat ini hanya mencetak ke console, nanti akan diganti fetch() ke API.
+   */
+  const processFinalOrder = () => {
+    const orderPayload = {
+      name,
+      phone,
+      notes,
+      items:      filledItems,
+      totalPrice,
+    };
+
+    console.log('Data pesanan final:', orderPayload);
 
     // TODO: ganti dengan fetch('/api/orders', { method: 'POST', body: JSON.stringify(orderPayload) })
 
+    // Tutup modal, lalu tampilkan pesan sukses
+    setIsConfirmModalOpen(false);
     setIsSubmitted(true);
   };
 
-  // ── Render ────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // HELPER: hapus error satu field saat user mulai mengetik
+  // Efek: teks merah "wajib diisi" langsung hilang saat user mengetik
+  // ─────────────────────────────────────────────────────────────
+  const clearError = (field) => {
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────
   return (
     <section className={styles.section} id="order">
       <div className={styles.container}>
@@ -263,6 +298,7 @@ const OrderForm = ({ defaultProductId = '' }) => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
+
                 {/* Field: Nama */}
                 <div className={styles.fieldGroup}>
                   <label htmlFor="name" className={styles.label}>
@@ -272,7 +308,10 @@ const OrderForm = ({ defaultProductId = '' }) => {
                     id="name"
                     type="text"
                     value={name}
-                    onChange={e => setName(e.target.value)}
+                    onChange={e => {
+                      setName(e.target.value);
+                      clearError('name'); // hapus error saat user mulai mengetik
+                    }}
                     className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
                     placeholder="Masukkan nama Anda"
                     autoComplete="name"
@@ -289,7 +328,18 @@ const OrderForm = ({ defaultProductId = '' }) => {
                     id="phone"
                     type="tel"
                     value={phone}
-                    onChange={e => setPhone(e.target.value)}
+                    onChange={e => {
+                      /**
+                       * Regex /\D/g — hapus karakter BUKAN angka secara real-time
+                       *
+                       * \D = "Non-Digit" (bukan 0-9)
+                       * g  = "global" → ganti SEMUA kemunculan, bukan hanya yang pertama
+                       *
+                       * Contoh: user ketik "081a" → state phone = "081"
+                       */
+                      setPhone(e.target.value.replace(/\D/g, ''));
+                      clearError('phone');
+                    }}
                     className={`${styles.input} ${errors.phone ? styles.inputError : ''}`}
                     placeholder="Contoh: 08123456789"
                     autoComplete="tel"
@@ -304,8 +354,8 @@ const OrderForm = ({ defaultProductId = '' }) => {
                   </label>
 
                   {/*
-                    map() merender satu <div> baris per elemen dalam orderItems.
-                    `item`  = objek pada index tersebut ({ productId, quantity })
+                    map() merender satu baris per elemen dalam orderItems.
+                    `item`  = objek ({ productId, quantity })
                     `index` = posisi dalam array (0, 1, 2, ...)
                     `key`   = wajib diisi React agar bisa track perubahan list
                   */}
@@ -313,37 +363,48 @@ const OrderForm = ({ defaultProductId = '' }) => {
                     {orderItems.map((item, index) => (
                       <div key={index} className={styles.itemRow}>
 
-                        {/* Dropdown pilih kopi (60% lebar) */}
+                        {/* Dropdown pilih kopi */}
                         <select
                           value={item.productId}
-                          onChange={e =>
-                            // updateItem dipanggil dengan index baris ini
-                            // sehingga hanya baris ini yang berubah di state
-                            updateItem(index, 'productId', e.target.value)
-                          }
+                          onChange={e => {
+                            updateItem(index, 'productId', e.target.value);
+                            clearError('items');
+                          }}
                           className={`${styles.input} ${styles.select} ${styles.selectFlex}`}
                           aria-label={`Produk baris ${index + 1}`}
                         >
                           <option value="">— Pilih kopi —</option>
-                          {PRODUCTS.map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
+                          {PRODUCTS.map(p => {
+                            /**
+                             * Cek duplikasi: apakah produk ini sudah dipilih di baris lain?
+                             * some() mengembalikan true jika ada baris LAIN (bukan baris ini)
+                             * yang sudah memilih produk yang sama.
+                             */
+                            const isDuplicate = orderItems.some(
+                              (otherItem, otherIndex) =>
+                                otherIndex !== index &&
+                                otherItem.productId === p.id
+                            );
+                            return (
+                              <option key={p.id} value={p.id} disabled={isDuplicate}>
+                                {isDuplicate ? `${p.name} (Sudah dipilih)` : p.name}
+                              </option>
+                            );
+                          })}
                         </select>
 
-                        {/* Input jumlah (20% lebar) */}
+                        {/* Input jumlah */}
                         <input
                           type="number"
                           min={1}
                           max={99}
                           value={item.quantity}
-                          onChange={e =>
-                            updateItem(index, 'quantity', e.target.value)
-                          }
+                          onChange={e => updateItem(index, 'quantity', e.target.value)}
                           className={`${styles.input} ${styles.qtyInput}`}
                           aria-label={`Jumlah baris ${index + 1}`}
                         />
 
-                        {/* Tombol hapus baris (20% lebar) — disabled jika hanya 1 baris */}
+                        {/* Tombol hapus baris — disabled jika hanya 1 baris */}
                         <button
                           type="button"
                           onClick={() => removeItem(index)}
@@ -359,13 +420,16 @@ const OrderForm = ({ defaultProductId = '' }) => {
 
                   {errors.items && <span className={styles.errorMsg}>{errors.items}</span>}
 
-                  {/* Tombol tambah baris baru */}
+                  {/*
+                    Tombol tambah baris — disabled & ganti teks jika semua produk sudah dipilih
+                  */}
                   <button
                     type="button"
                     onClick={addItem}
-                    className={styles.addItemBtn}
+                    disabled={isMaxItems}
+                    className={isMaxItems ? styles.addItemBtnDisabled : styles.addItemBtn}
                   >
-                    + Tambah Kopi
+                    {isMaxItems ? 'Semua Menu Telah Dipilih' : '+ Tambah Kopi'}
                   </button>
                 </div>
 
@@ -381,24 +445,28 @@ const OrderForm = ({ defaultProductId = '' }) => {
                   )}
                 </div>
 
-                {/* Field: Alamat / Catatan */}
+                {/* Field: Alamat & Catatan — wajib diisi */}
                 <div className={styles.fieldGroup}>
                   <label htmlFor="notes" className={styles.label}>
-                    Alamat & Catatan
+                    Alamat &amp; Catatan <span className={styles.required}>*</span>
                   </label>
                   <textarea
                     id="notes"
                     value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    className={`${styles.input} ${styles.textarea}`}
+                    onChange={e => {
+                      setNotes(e.target.value);
+                      clearError('notes');
+                    }}
+                    className={`${styles.input} ${styles.textarea} ${errors.notes ? styles.inputError : ''}`}
                     placeholder="Alamat pengiriman atau catatan khusus..."
                     rows={3}
                   />
+                  {errors.notes && <span className={styles.errorMsg}>{errors.notes}</span>}
                 </div>
 
-                {/* Submit */}
+                {/* Tombol buka Modal Konfirmasi */}
                 <button type="submit" className={styles.submitButton}>
-                  Confirm Order
+                  Konfirmasi Pesanan
                 </button>
 
               </motion.form>
@@ -407,6 +475,98 @@ const OrderForm = ({ defaultProductId = '' }) => {
         </motion.div>
 
       </div>
+
+      {/*
+        ── Modal Ringkasan Pesanan ─────────────────────────────
+        Hanya dirender saat isConfirmModalOpen === true.
+
+        Alur data ke modal:
+          1. User isi form (name, phone, notes, orderItems)
+          2. Klik "Konfirmasi Pesanan" → handleSubmit() → validasi lolos
+          3. setIsConfirmModalOpen(true) → modal muncul
+          4. Modal menampilkan data dari state (name, phone, filledItems, totalPrice)
+          5. User klik "KONFIRMASI & PESAN" → processFinalOrder() → selesai
+      */}
+      {isConfirmModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsConfirmModalOpen(false)} // klik di luar = tutup
+        >
+          <div
+            className={styles.modalBox}
+            onClick={e => e.stopPropagation()} // cegah klik dalam box menutup modal
+          >
+            {/* Header modal */}
+            <span className={styles.modalEyebrow}>Periksa kembali pesanan Anda</span>
+            <h3 className={styles.modalTitle}>Konfirmasi Pesanan</h3>
+            <div className={styles.modalDivider} />
+
+            {/* Data pemesan */}
+            <div className={styles.modalSection}>
+              <p className={styles.modalSectionLabel}>Data Pemesan</p>
+              <div className={styles.modalInfoGrid}>
+                <span className={styles.modalKey}>Nama</span>
+                <span className={styles.modalVal}>{name}</span>
+                <span className={styles.modalKey}>WhatsApp</span>
+                <span className={styles.modalVal}>{phone}</span>
+                <span className={styles.modalKey}>Alamat</span>
+                <span className={styles.modalVal}>{notes}</span>
+              </div>
+            </div>
+
+            <div className={styles.modalDivider} />
+
+            {/* Daftar item pesanan */}
+            <div className={styles.modalSection}>
+              <p className={styles.modalSectionLabel}>Daftar Pesanan</p>
+              {/*
+                map() pada filledItems (bukan orderItems) agar baris kosong
+                tidak ikut tampil di ringkasan. Setiap baris menampilkan:
+                nama kopi, jumlah, dan subtotal.
+              */}
+              {filledItems.map((item, i) => {
+                const product = PRODUCTS.find(p => p.id === item.productId);
+                const subtotal = product ? product.price * Number(item.quantity) : 0;
+                return (
+                  <div key={i} className={styles.modalItemRow}>
+                    <span className={styles.modalItemName}>{product?.name}</span>
+                    <span className={styles.modalItemQty}>×{item.quantity}</span>
+                    <span className={styles.modalItemPrice}>{formatRupiah(subtotal)}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className={styles.modalDivider} />
+
+            {/* Total harga */}
+            <div className={styles.modalTotalRow}>
+              <span className={styles.modalTotalLabel}>Total</span>
+              <span className={styles.modalTotalPrice}>{formatRupiah(totalPrice)}</span>
+            </div>
+
+            {/* Tombol aksi */}
+            <div className={styles.modalActions}>
+              {/* Tombol 1: kembali ke form untuk mengedit */}
+              <button
+                className={styles.modalBtnSecondary}
+                onClick={() => setIsConfirmModalOpen(false)}
+              >
+                Kembali / Edit
+              </button>
+
+              {/* Tombol 2: konfirmasi dan proses pesanan */}
+              <button
+                className={styles.modalBtnPrimary}
+                onClick={processFinalOrder}
+              >
+                Konfirmasi &amp; Pesan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </section>
   );
 };

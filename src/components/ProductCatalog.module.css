@@ -215,26 +215,31 @@
 }
 
 /*
-  Teknik "border reveal":
-  Tombol memiliki border putih tipis yang menjadi lebih terang saat hover.
-  Background tetap transparan agar terasa "bersih" dan premium.
+  "Lihat Semua Menu" — tombol bergaya dark editorial
+  Reset browser defaults dulu (background, border bawaan <button>),
+  lalu terapkan gaya kustom: border tipis putih, teks abu-abu.
 */
 .viewAllBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
 
+  /* Reset default <button> agar tidak jadi kotak putih */
+  appearance: none;
+  background: transparent;
+
+  /* Border tipis putih yang sedikit terlihat */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 100px;
+  padding: 1rem 2.5rem;
+
   font-family: 'Inter', sans-serif;
   font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  text-decoration: none;
   color: rgba(255, 255, 255, 0.5);
-
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 100px;
-  padding: 1rem 2.5rem;
+  cursor: pointer;
 
   transition: color 0.25s ease, border-color 0.25s ease;
 }
@@ -253,3 +258,117 @@
 .viewAllBtn:hover .btnArrow {
   transform: translate(2px, -2px);
 }
+
+/* ── Modal Overlay (latar belakang gelap fullscreen) ─── */
+/*
+  position: fixed → elemen "mengambang" di atas semua konten,
+  tidak terpengaruh scroll halaman.
+  inset: 0 → shorthand untuk top/right/bottom/left semua = 0
+  z-index: 1000 → memastikan modal selalu di atas elemen lain
+*/
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  /* Pusatkan modalBox secara horizontal dan vertikal */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Animasi muncul dengan CSS transition */
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Kotak konten modal ──────────────────────────────── */
+.modalBox {
+  background-color: #0a0808;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 3.5rem;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  /* Scale-in saat muncul */
+  animation: scaleIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Label kecil di atas judul */
+.modalEyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* Judul "Coming Soon" — gunakan Cormorant Garamond agar mewah */
+.modalTitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.2rem, 6vw, 3.2rem);
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+
+/* Sub-teks deskripsi */
+.modalText {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.38);
+  max-width: 320px;
+}
+
+/* Garis dekorasi tipis */
+.modalDivider {
+  width: 40px;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 0.5rem 0;
+}
+
+/* Tombol "KEMBALI" di dalam modal */
+.modalCloseBtn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 100px;
+  padding: 0.75rem 2rem;
+  cursor: pointer;
+
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+
+  margin-top: 0.5rem;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.modalCloseBtn:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+

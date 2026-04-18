@@ -38,7 +38,7 @@ const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 // KOMPONEN UTAMA
 // ─────────────────────────────────────────────────────────────
 const Footer = () => (
-  <footer className={styles.footer}>
+  <footer id="contact" className={styles.footer}>
 
     {/* ── Top Row: 3-column grid ──────────────────────────── */}
     <div className={styles.topRow}>

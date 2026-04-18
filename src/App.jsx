@@ -6,15 +6,17 @@
  *   2. Hero           — halaman pembuka dengan logo animasi
  *   3. IntroSection   — pengenalan brand dengan bunga kopi
  *   4. BeanSection    — biji kopi berputar
- *   5. ProductCatalog — katalog produk; klik "Pesan" → isi form otomatis
- *   6. OrderForm      — formulir pemesanan; menerima pilihan dari katalog
+ *   5. ProductCatalog — katalog produk; klik "Pesan" → Smart Add ke form
+ *   6. OrderForm      — formulir pemesanan; menerima orderItems dari App
  *   7. Footer         — penutup dengan brand besar
  *
- * ALUR DATA (Prop Drilling):
- *   App.jsx menyimpan `selectedProduct` (string ID produk).
- *   ProductCatalog → App (lewat onSelectProduct) → OrderForm (lewat defaultProductId)
- *   Ini contoh nyata "state lifting" — state dinaikkan ke komponen terdekat
- *   yang menjadi induk dari dua komponen yang perlu berbagi data.
+ * ALUR DATA (State Lifting):
+ *   `orderItems` disimpan di App.jsx karena dibutuhkan oleh dua komponen:
+ *   • ProductCatalog  — menulis data lewat smartAddProduct()
+ *   • OrderForm       — membaca & mengedit data lewat props
+ *
+ *   Pola ini disebut "Single Source of Truth" — satu sumber data
+ *   yang dikontrol oleh komponen induk (App.jsx).
  */
 
 import { useRef, useLayoutEffect, useState } from 'react';
@@ -42,18 +44,75 @@ function App() {
   const { scrollY } = useScroll();
 
   /**
-   * selectedProduct — STATE BERSAMA antara Catalog dan Order Form
+   * orderItems — STATE BERSAMA antara ProductCatalog dan OrderForm
    *
-   * Mengapa state ini ada di App.jsx, bukan di ProductCatalog atau OrderForm?
-   * Karena kedua komponen tersebut adalah SAUDARA (sibling) — mereka tidak
-   * bisa langsung berbagi data satu sama lain.
+   * Disimpan di App.jsx (bukan di OrderForm) karena ProductCatalog
+   * juga perlu membaca dan menulis data ini lewat smartAddProduct().
    *
-   * Solusinya: "State Lifting" (angkat state ke komponen induk = App.jsx)
-   * App.jsx menjadi perantara:
-   *   • ProductCatalog SET nilainya lewat callback `onSelectProduct`
-   *   • OrderForm READ nilainya lewat prop `defaultProductId`
+   * Bentuk data: array of objects
+   *   [{ productId: 'semeru-espresso', quantity: 1 }, ...]
+   *
+   * State ini diteruskan ke OrderForm sebagai prop agar form bisa
+   * menampilkan dan mengedit baris-baris pesanan.
    */
-  const [selectedProduct, setSelectedProduct] = useState('');
+  const [orderItems, setOrderItems] = useState([{ productId: '', quantity: 1 }]);
+
+  /**
+   * smartAddProduct — logika cerdas saat user klik "PESAN SEKARANG"
+   *
+   * Dipanggil oleh ProductCatalog dengan membawa `selectedId` (string ID kopi).
+   * Tiga tahap keputusan (if–else if–else):
+   *
+   * @param {string} selectedId - ID produk yang dipilih user
+   */
+  const smartAddProduct = (selectedId) => {
+    setOrderItems(prev => {
+      // ── Tahap 1: Cek Duplikasi ─────────────────────────────
+      // Apakah produk ini sudah ada di dalam salah satu baris?
+      // some() mengembalikan true jika ADA minimal satu baris yang cocok.
+      const sudahAda = prev.some(item => item.productId === selectedId);
+
+      if (sudahAda) {
+        // Produk sudah dipilih sebelumnya → tidak perlu ubah apapun.
+        // Cukup scroll ke form (dilakukan di bawah, di luar setOrderItems).
+        return prev; // kembalikan array tanpa perubahan
+      }
+
+      // ── Tahap 2: Cari Baris Kosong ─────────────────────────
+      // Apakah ada baris yang productId-nya masih kosong (belum dipilih)?
+      // findIndex() mengembalikan INDEX pertama yang cocok, atau -1 jika tidak ada.
+      const indexKosong = prev.findIndex(item => item.productId === '');
+
+      if (indexKosong !== -1) {
+        // Ada baris kosong → isi baris kosong PERTAMA dengan produk yang dipilih.
+        // map() menelusuri array: hanya baris di indexKosong yang diubah,
+        // baris lain dikembalikan apa adanya.
+        return prev.map((item, i) =>
+          i === indexKosong
+            ? { ...item, productId: selectedId } // isi baris kosong ini
+            : item                                // baris lain: tidak diubah
+        );
+      }
+
+      // ── Tahap 3: Tambah Baris Baru ─────────────────────────
+      // Tidak ada duplikat, tidak ada baris kosong.
+      // Periksa apakah masih ada "slot" (jumlah baris < jumlah varian produk).
+      // Jika ya, tambahkan baris baru di akhir array menggunakan spread operator.
+      const MAKS_PRODUK = 3; // sesuai jumlah di PRODUCTS (Semeru, Mandheling, Toraja)
+      if (prev.length < MAKS_PRODUK) {
+        return [...prev, { productId: selectedId, quantity: 1 }];
+      }
+
+      // Jika sudah penuh dan tidak ada baris kosong, tidak ada yang bisa dilakukan.
+      return prev;
+    });
+
+    // Scroll ke form pesanan setelah state diupdate
+    // setTimeout kecil memberi waktu React menyelesaikan render ulang
+    setTimeout(() => {
+      document.getElementById('order')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
 
   // Posisi awal & akhir logo (diukur setelah render pertama)
   const [yStart, setYStart] = useState(-200);
@@ -110,19 +169,20 @@ function App() {
       <BeanSection />
 
       {/*
-        onSelectProduct: fungsi yang diberikan ke ProductCatalog.
+        onSelectProduct menerima fungsi smartAddProduct dari App.jsx.
         Saat user klik "PESAN SEKARANG", ProductCatalog memanggil
-        fungsi ini dengan ID produk yang dipilih.
-        App.jsx menyimpannya di state `selectedProduct`.
+        fungsi ini — TANPA lagi melakukan scroll sendiri (sudah dihandle
+        di dalam smartAddProduct).
       */}
-      <ProductCatalog onSelectProduct={setSelectedProduct} />
+      <ProductCatalog onSelectProduct={smartAddProduct} />
 
       {/*
-        defaultProductId: nilai dari `selectedProduct` diteruskan ke OrderForm.
-        Saat nilainya berubah, useEffect di dalam OrderForm akan otomatis
-        mengisi dropdown baris pertama dengan produk yang dipilih.
+        orderItems   — data baris pesanan (array) dari App.jsx
+        setOrderItems — fungsi untuk mengubah baris pesanan dari dalam form
+        Dengan pola ini OrderForm bisa menambah, menghapus, dan mengubah
+        baris tanpa perlu mengangkat state lebih jauh.
       */}
-      <OrderForm defaultProductId={selectedProduct} />
+      <OrderForm orderItems={orderItems} setOrderItems={setOrderItems} />
       <Footer />
     </div>
   );
