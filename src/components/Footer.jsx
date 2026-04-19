@@ -45,7 +45,11 @@ const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA
 // ─────────────────────────────────────────────────────────────
-const Footer = () => (
+/**
+ * @prop {function} navigateTo — fungsi berpindah halaman dari App.jsx
+ *   Digunakan untuk link tersembunyi "Admin Console" di bagian bawah.
+ */
+const Footer = ({ navigateTo }) => (
   <footer id="contact" className={styles.footer}>
 
     {/* ── Top Row: 3-column grid ──────────────────────────── */}
@@ -111,6 +115,31 @@ const Footer = () => (
     <div className={styles.copyright}>
       <span>© 2026 Bima Ananta</span>
       <span>Built with React</span>
+      {/*
+        Link tersembunyi ke Admin Console.
+        Terlihat seperti teks copyright biasa agar tidak mencolok.
+        Menggunakan navigateTo('auth') dari App.jsx untuk berpindah
+        ke halaman login sebelum masuk ke dashboard admin.
+      */}
+      <button
+        onClick={() => navigateTo('auth')}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          fontSize: 'inherit',
+          color: 'rgba(255,255,255,0.12)',
+          letterSpacing: '0.08em',
+          padding: 0,
+          transition: 'color 0.3s',
+        }}
+        onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.4)'}
+        onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.12)'}
+        title="Admin Area"
+      >
+        Admin Console
+      </button>
     </div>
 
     {/* ── Architectural Brand Name (bottom) ───────────────── */}

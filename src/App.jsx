@@ -1,190 +1,229 @@
 /**
- * App.jsx — Root komponen BIMA COFFEE Landing Page
+ * App.jsx — Root komponen BIMA COFFEE
  *
- * Urutan section:
- *   1. Navbar         — navigasi tetap di atas
- *   2. Hero           — halaman pembuka dengan logo animasi
- *   3. IntroSection   — pengenalan brand dengan bunga kopi
- *   4. BeanSection    — biji kopi berputar
- *   5. ProductCatalog — katalog produk; klik "Pesan" → Smart Add ke form
- *   6. OrderForm      — formulir pemesanan; menerima orderItems dari App
- *   7. Footer         — penutup dengan brand besar
+ * Menggunakan teknik "State-Based Routing":
+ *   Berpindah halaman tanpa install react-router-dom,
+ *   cukup dengan mengubah nilai state `currentView`.
  *
- * ALUR DATA (State Lifting):
- *   `orderItems` disimpan di App.jsx karena dibutuhkan oleh dua komponen:
- *   • ProductCatalog  — menulis data lewat smartAddProduct()
- *   • OrderForm       — membaca & mengedit data lewat props
+ * Nilai `currentView` yang tersedia:
+ *   'landing' → Halaman utama (Hero, Katalog, Order Form, dll)
+ *   'auth'    → Halaman Login / Register
+ *   'admin'   → Halaman Admin Console (Dashboard)
  *
- *   Pola ini disebut "Single Source of Truth" — satu sumber data
- *   yang dikontrol oleh komponen induk (App.jsx).
+ * State Lifting yang tetap berjalan:
+ *   `orderItems` dibagi antara ProductCatalog dan OrderForm.
  */
 
-import { useRef, useLayoutEffect, useState } from 'react';
+import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { useScroll, useTransform, useSpring, motion } from 'framer-motion';
 
-import Navbar         from './components/Navbar';
-import Hero           from './components/Hero';
-import IntroSection   from './components/IntroSection';
-import BeanSection    from './components/BeanSection';
-import ProductCatalog from './components/ProductCatalog';
-import OrderForm      from './components/OrderForm';
-import Footer         from './components/Footer';
+import Navbar          from './components/Navbar';
+import Hero            from './components/Hero';
+import IntroSection    from './components/IntroSection';
+import BeanSection     from './components/BeanSection';
+import ProductCatalog  from './components/ProductCatalog';
+import OrderForm       from './components/OrderForm';
+import Footer          from './components/Footer';
+import AuthPage        from './components/AuthPage';
+import AdminDashboard  from './components/AdminDashboard';
 
 import './App.css';
 
 // ─────────────────────────────────────────────────────────────
 // KONSTANTA ANIMASI LOGO
 // ─────────────────────────────────────────────────────────────
-const NAVBAR_HEIGHT = 80;   // harus sama dengan nilai di Navbar.module.css
-const ANIM_END      = 300;  // jarak scroll (px) sebelum animasi selesai
+const NAVBAR_HEIGHT = 80;
+const ANIM_END      = 300;
 const SPRING        = { stiffness: 400, damping: 40, mass: 1, restDelta: 0.001 };
 
+// ─────────────────────────────────────────────────────────────
+// LANDING PAGE VIEW — dibungkus agar bisa di-mount/unmount bersih
+// ─────────────────────────────────────────────────────────────
+/**
+ * LandingPageView menerima props dari App:
+ *   @prop {function} navigateTo   — fungsi berpindah halaman
+ *   @prop {Array}    orderItems   — state pesanan bersama
+ *   @prop {function} setOrderItems
+ *   @prop {function} smartAddProduct
+ *   @prop {object}   logoRef      — ref untuk animasi logo
+ *   @prop {object}   y, scale     — nilai animasi dari framer-motion
+ */
+const LandingPageView = ({ navigateTo, orderItems, setOrderItems, smartAddProduct, logoRef, y, scale, scrollY }) => (
+  <div
+    className="app-container"
+    style={{ minHeight: '100vh', position: 'relative', backgroundColor: '#000000' }}
+  >
+    <Navbar scrollY={scrollY} navbarHeight={NAVBAR_HEIGHT} animEnd={ANIM_END} />
+
+    {/* Logo beranimasi: bergerak dari tengah layar ke tengah navbar */}
+    <div className="logo-anchor">
+      <motion.div ref={logoRef} className="logo-motion" style={{ y, scale }}>
+        <span className="logo-line">BIMA</span>
+        <span className="logo-line">COFFEE</span>
+      </motion.div>
+    </div>
+
+    <Hero />
+    <IntroSection />
+    <BeanSection />
+    <ProductCatalog onSelectProduct={smartAddProduct} />
+    <OrderForm orderItems={orderItems} setOrderItems={setOrderItems} />
+
+    {/*
+      Footer menerima navigateTo agar bisa menampilkan
+      link tersembunyi "Admin Console" untuk berpindah ke halaman auth.
+    */}
+    <Footer navigateTo={navigateTo} />
+  </div>
+);
+
+// ─────────────────────────────────────────────────────────────
+// KOMPONEN UTAMA APP
+// ─────────────────────────────────────────────────────────────
 function App() {
   const logoRef      = useRef(null);
   const { scrollY } = useScroll();
 
   /**
-   * orderItems — STATE BERSAMA antara ProductCatalog dan OrderForm
+   * currentView — State utama navigasi halaman
    *
-   * Disimpan di App.jsx (bukan di OrderForm) karena ProductCatalog
-   * juga perlu membaca dan menulis data ini lewat smartAddProduct().
+   * Ini adalah pengganti react-router-dom yang sederhana.
+   * Cukup ubah nilai string ini untuk "berpindah halaman".
    *
-   * Bentuk data: array of objects
-   *   [{ productId: 'semeru-espresso', quantity: 1 }, ...]
+   * Nilai yang tersedia: 'landing' | 'auth' | 'admin'
    *
-   * State ini diteruskan ke OrderForm sebagai prop agar form bisa
-   * menampilkan dan mengedit baris-baris pesanan.
+   * Lazy initializer: fungsi di dalam useState() dijalankan SEKALI saat pertama render.
+   * localStorage.getItem() membaca nilai yang tersimpan dari sesi sebelumnya.
+   * Jika tidak ada nilai tersimpan (buka pertama kali), fallback ke 'landing'.
    */
+  const [currentView, setCurrentView] = useState(() => {
+    return localStorage.getItem('bimaCoffeeView') || 'landing';
+  });
+
+  /**
+   * navigateTo — fungsi pembantu untuk berpindah halaman
+   * Diteruskan ke semua komponen anak yang butuh pindah halaman.
+   *
+   * @param {string} view - nama halaman tujuan
+   */
+  const navigateTo = (view) => {
+    setCurrentView(view);
+    // Hapus hash fragment (#order, #catalog, dll) dari URL agar tidak
+    // menyebabkan auto-scroll saat user me-refresh halaman
+    window.history.replaceState(null, '', window.location.pathname);
+    // Langsung ke paling atas (tanpa animasi agar transisi halaman terasa tegas)
+    window.scrollTo(0, 0);
+  };
+
+  /**
+   * useEffect #1 — sinkronisasi currentView ke localStorage
+   *
+   * Setiap kali currentView berubah (user berpindah halaman),
+   * nilai baru langsung disimpan ke localStorage.
+   * Sehingga jika halaman di-refresh, state tidak hilang.
+   */
+  useEffect(() => {
+    localStorage.setItem('bimaCoffeeView', currentView);
+  }, [currentView]);
+
+  /**
+   * useEffect #2 — pembersih hash saat pertama kali halaman dimuat
+   *
+   * Skenario: user me-refresh halaman saat URL masih mengandung hash
+   * (misal: localhost:5173/#order). Efek ini membersihkan hash tersebut
+   * dan mengembalikan scroll ke atas SEBELUM React merender apapun.
+   *
+   * Array dependensi kosong [] = hanya berjalan SEKALI saat mount.
+   */
+  useEffect(() => {
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname);
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
+  // ── State Lifting: orderItems ─────────────────────────────
   const [orderItems, setOrderItems] = useState([{ productId: '', quantity: 1 }]);
 
   /**
    * smartAddProduct — logika cerdas saat user klik "PESAN SEKARANG"
-   *
-   * Dipanggil oleh ProductCatalog dengan membawa `selectedId` (string ID kopi).
-   * Tiga tahap keputusan (if–else if–else):
-   *
-   * @param {string} selectedId - ID produk yang dipilih user
+   * Tiga tahap: cek duplikat → isi baris kosong → tambah baris baru
    */
   const smartAddProduct = (selectedId) => {
     setOrderItems(prev => {
-      // ── Tahap 1: Cek Duplikasi ─────────────────────────────
-      // Apakah produk ini sudah ada di dalam salah satu baris?
-      // some() mengembalikan true jika ADA minimal satu baris yang cocok.
-      const sudahAda = prev.some(item => item.productId === selectedId);
+      const sudahAda   = prev.some(item => item.productId === selectedId);
+      if (sudahAda) return prev;
 
-      if (sudahAda) {
-        // Produk sudah dipilih sebelumnya → tidak perlu ubah apapun.
-        // Cukup scroll ke form (dilakukan di bawah, di luar setOrderItems).
-        return prev; // kembalikan array tanpa perubahan
-      }
-
-      // ── Tahap 2: Cari Baris Kosong ─────────────────────────
-      // Apakah ada baris yang productId-nya masih kosong (belum dipilih)?
-      // findIndex() mengembalikan INDEX pertama yang cocok, atau -1 jika tidak ada.
       const indexKosong = prev.findIndex(item => item.productId === '');
-
       if (indexKosong !== -1) {
-        // Ada baris kosong → isi baris kosong PERTAMA dengan produk yang dipilih.
-        // map() menelusuri array: hanya baris di indexKosong yang diubah,
-        // baris lain dikembalikan apa adanya.
         return prev.map((item, i) =>
-          i === indexKosong
-            ? { ...item, productId: selectedId } // isi baris kosong ini
-            : item                                // baris lain: tidak diubah
+          i === indexKosong ? { ...item, productId: selectedId } : item
         );
       }
 
-      // ── Tahap 3: Tambah Baris Baru ─────────────────────────
-      // Tidak ada duplikat, tidak ada baris kosong.
-      // Periksa apakah masih ada "slot" (jumlah baris < jumlah varian produk).
-      // Jika ya, tambahkan baris baru di akhir array menggunakan spread operator.
-      const MAKS_PRODUK = 3; // sesuai jumlah di PRODUCTS (Semeru, Mandheling, Toraja)
+      const MAKS_PRODUK = 3;
       if (prev.length < MAKS_PRODUK) {
         return [...prev, { productId: selectedId, quantity: 1 }];
       }
 
-      // Jika sudah penuh dan tidak ada baris kosong, tidak ada yang bisa dilakukan.
       return prev;
     });
 
-    // Scroll ke form pesanan setelah state diupdate
-    // setTimeout kecil memberi waktu React menyelesaikan render ulang
     setTimeout(() => {
       document.getElementById('order')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
-  // Posisi awal & akhir logo (diukur setelah render pertama)
+  // ── Animasi Logo ──────────────────────────────────────────
   const [yStart, setYStart] = useState(-200);
   const [yEnd,   setYEnd]   = useState(-200);
 
-  /**
-   * useLayoutEffect
-   * Mengukur tinggi logo setelah elemen ada di DOM,
-   * lalu menghitung posisi Y awal (tengah layar) dan akhir (tengah navbar).
-   */
   useLayoutEffect(() => {
     if (!logoRef.current) return;
-
     const recalc = () => {
       const vh    = window.innerHeight;
       const logoH = logoRef.current.offsetHeight;
-
-      setYStart(vh / 2 - logoH / 2);               // tengah layar
-      setYEnd(NAVBAR_HEIGHT / 2 - logoH / 2);       // tengah navbar
+      setYStart(vh / 2 - logoH / 2);
+      setYEnd(NAVBAR_HEIGHT / 2 - logoH / 2);
     };
-
     recalc();
     window.addEventListener('resize', recalc);
     return () => window.removeEventListener('resize', recalc);
   }, []);
 
-  // useTransform: memetakan nilai scrollY ke nilai Y dan scale
   const rawY     = useTransform(scrollY, [0, ANIM_END], [yStart, yEnd]);
   const rawScale = useTransform(scrollY, [0, ANIM_END], [1, 0.27]);
+  const y        = useSpring(rawY,     SPRING);
+  const scale    = useSpring(rawScale, SPRING);
 
-  // useSpring: menambahkan efek "kenyal" pada animasi
-  const y     = useSpring(rawY,     SPRING);
-  const scale = useSpring(rawScale, SPRING);
+  // ─────────────────────────────────────────────────────────
+  // CONDITIONAL RENDERING — State-Based Routing
+  //
+  // React melihat nilai `currentView` dan memutuskan komponen
+  // mana yang akan ditampilkan. Hanya satu yang aktif sekaligus.
+  // ─────────────────────────────────────────────────────────
+  if (currentView === 'auth') {
+    // Halaman Login / Register
+    return <AuthPage navigateTo={navigateTo} />;
+  }
 
+  if (currentView === 'admin') {
+    // Halaman Admin Console
+    return <AdminDashboard navigateTo={navigateTo} />;
+  }
+
+  // Default: Halaman Landing Page
   return (
-    <div
-      className="app-container"
-      style={{ minHeight: '100vh', position: 'relative', backgroundColor: '#000000' }}
-    >
-      {/* Navbar selalu tampil di atas */}
-      <Navbar scrollY={scrollY} navbarHeight={NAVBAR_HEIGHT} animEnd={ANIM_END} />
-
-      {/* Logo beranimasi: bergerak dari tengah layar ke tengah navbar */}
-      <div className="logo-anchor">
-        <motion.div ref={logoRef} className="logo-motion" style={{ y, scale }}>
-          <span className="logo-line">BIMA</span>
-          <span className="logo-line">COFFEE</span>
-        </motion.div>
-      </div>
-
-      {/* Bagian-bagian halaman */}
-      <Hero />
-      <IntroSection />
-      <BeanSection />
-
-      {/*
-        onSelectProduct menerima fungsi smartAddProduct dari App.jsx.
-        Saat user klik "PESAN SEKARANG", ProductCatalog memanggil
-        fungsi ini — TANPA lagi melakukan scroll sendiri (sudah dihandle
-        di dalam smartAddProduct).
-      */}
-      <ProductCatalog onSelectProduct={smartAddProduct} />
-
-      {/*
-        orderItems   — data baris pesanan (array) dari App.jsx
-        setOrderItems — fungsi untuk mengubah baris pesanan dari dalam form
-        Dengan pola ini OrderForm bisa menambah, menghapus, dan mengubah
-        baris tanpa perlu mengangkat state lebih jauh.
-      */}
-      <OrderForm orderItems={orderItems} setOrderItems={setOrderItems} />
-      <Footer />
-    </div>
+    <LandingPageView
+      navigateTo={navigateTo}
+      orderItems={orderItems}
+      setOrderItems={setOrderItems}
+      smartAddProduct={smartAddProduct}
+      logoRef={logoRef}
+      y={y}
+      scale={scale}
+      scrollY={scrollY}
+    />
   );
 }
 

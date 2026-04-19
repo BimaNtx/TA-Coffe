@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './AuthPage.module.css';
 
-const AuthPage = () => {
+const AuthPage = ({ navigateTo }) => {
   /**
    * STATE TOGGLE: isLogin
    *
@@ -35,7 +35,9 @@ const AuthPage = () => {
    */
   const handleAuth = (e) => {
     e.preventDefault();
-    window.alert('Simulasi: Berhasil masuk ke sistem!');
+    // Simulasi login sukses: langsung pindah ke halaman Admin Dashboard
+    // Nanti ganti dengan validasi username + password dari Supabase
+    navigateTo('admin');
   };
 
   return (
@@ -134,6 +136,15 @@ const AuthPage = () => {
               {isLogin ? 'Buat di sini.' : 'Masuk di sini.'}
             </button>
           </p>
+          {/* Kembali ke halaman utama tanpa login */}
+          <button
+            type="button"
+            className={styles.toggleBtn}
+            style={{ marginTop: '0.75rem', display: 'block', width: '100%', opacity: 0.5 }}
+            onClick={() => navigateTo('landing')}
+          >
+            ← Kembali ke Beranda
+          </button>
         </div>
       </motion.div>
     </section>

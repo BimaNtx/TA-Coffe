@@ -159,6 +159,45 @@
   color: rgba(255, 255, 255, 0.4);
 }
 
+/* Wrapper kanan header tabel */
+.tableActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Tombol refresh data manual */
+.refreshBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.4);
+  padding: 0.4rem 0.85rem;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.refreshBtn:hover {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* State loading & kosong */
+.loadingState,
+.emptyState {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.loadingText,
+.emptyText {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.2);
+}
+
 .tableContainer {
   width: 100%;
   overflow-x: auto;
@@ -221,6 +260,65 @@
   font-size: 0.85rem;
   font-weight: 500;
   color: #ffffff;
+  white-space: nowrap;
+}
+
+/* Kolom tanggal */
+.tdDate {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+
+/* Kolom kontak & alamat —
+   td tetap display:table-cell (default),
+   flex hanya diterapkan pada div pembungkus di dalam td */
+.tdContact {
+  vertical-align: middle;
+}
+.tdContactInner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.contactWa {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+.contactAddress {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.35);
+  /* Izinkan teks melipat ke bawah secara penuh */
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.5;
+  max-width: 220px;
+}
+
+/* Chip kecil tiap item pesanan (dari kolom JSONB) —
+   td tetap display:table-cell, flex ada di div pembungkus */
+.tdItems {
+  vertical-align: middle;
+}
+.tdItemsInner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-width: 220px;
+}
+.itemChip {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+  padding: 0.2rem 0.5rem;
+  text-transform: capitalize;
 }
 
 /* ── STATUS BADGE ──────────────────────────────────────── */
@@ -303,4 +401,52 @@
   .ordersTable th, .ordersTable td {
     padding: 1rem;
   }
+}
+
+
+/* ── FOOTER PAGINASI ──────────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1.25rem 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pageBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.5rem 1.1rem;
+  border-radius: 4px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageBtn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+.pageBtn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.pageInfo {
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
+}
+
+.pageInfo strong {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
 }
