@@ -94,6 +94,40 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
   // State loading saat sedang mengirim data ke Supabase
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /**
+   * isSuccess — menandai apakah INSERT ke Supabase berhasil
+   *
+   * false (default) → modal menampilkan Ringkasan Pesanan
+   * true            → modal berubah menampilkan tampilan sukses yang elegan
+   *
+   * Pola ini disebut Conditional Rendering:
+   * Komponen yang ditampilkan bergantung pada nilai state ini.
+   */
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  /**
+   * handleCloseSuccess — dipanggil HANYA saat user klik "KEMBALI KE MENU"
+   * di tampilan sukses dalam modal.
+   *
+   * Fungsi ini melakukan 2 hal sekaligus:
+   *   1. Mereset semua state form kembali ke nilai kosong/awal
+   *   2. Menutup modal konfirmasi
+   *
+   * Catatan: Fungsi ini TIDAK dipasang di tombol lain manapun,
+   * agar form tidak ikut terhapus saat user klik "Batal" di tengah proses.
+   */
+  const handleCloseSuccess = () => {
+    // Reset data pemesan
+    setName('');
+    setPhone('');
+    setNotes('');
+    // Reset daftar item pesanan ke 1 baris kosong (nilai awal)
+    setOrderItems([{ productId: '', quantity: 1 }]);
+    // Reset state modal
+    setIsSuccess(false);
+    setIsConfirmModalOpen(false);
+  };
+
   // ─────────────────────────────────────────────────────────────
   // FUNGSI MANIPULASI ARRAY orderItems
   // ─────────────────────────────────────────────────────────────
@@ -225,45 +259,32 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
    * database secara asynchronous tanpa membuat browser hang.
    */
   const processFinalOrder = async () => {
-    setIsSubmitting(true); // Aktifkan indikator loading
+    setIsSubmitting(true);
 
     try {
-      // Siapkan payload dengan nama key persis dengan kolom Supabase
       const payloadData = {
         nama: name,
         nomor_wa: phone,
         alamat: notes,
-        detail_pesanan: filledItems, // otomatis dikonversi ke format JSONB oleh Supabase
+        detail_pesanan: filledItems,
         total_harga: totalPrice
       };
 
       console.log('Mengirim ke Supabase:', payloadData);
 
-      // Lakukan operasi INSERT data ke tabel `pesanan`
       const { error } = await supabase
         .from('pesanan')
         .insert([payloadData]);
 
-      if (error) throw error; // Lempar ke blok catch jika ada error dari server
+      if (error) throw error;
 
-      // ── Jika sukses ──
-      alert('Pesanan berhasil diterima! Barista kami akan segera memprosesnya.');
-      
-      // Reset semua input kembali ke nilai default asli
-      setName('');
-      setPhone('');
-      setNotes('');
-      setOrderItems([{ productId: '', quantity: 1 }]);
-      
-      setIsConfirmModalOpen(false); // Tutup modal
-      setIsSubmitted(true);         // Tampilkan layar sukses
+      // Sukses: tampilkan layar konfirmasi di dalam modal (bukan alert)
+      setIsSuccess(true);
 
     } catch (err) {
       console.error('Database Error:', err);
-      // Tangkap dan tunjukkan kepada pengguna pesannya
       alert('Terjadi kesalahan: ' + err.message);
     } finally {
-      // Pastikan state diubah di akhir baik terjadi error atau berhasil
       setIsSubmitting(false);
     }
   };
@@ -521,80 +542,100 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
       {isConfirmModalOpen && (
         <div
           className={styles.modalOverlay}
-          onClick={() => setIsConfirmModalOpen(false)} // klik di luar = tutup
         >
           <div
             className={styles.modalBox}
-            onClick={e => e.stopPropagation()} // cegah klik dalam box menutup modal
           >
-            {/* Header modal */}
-            <span className={styles.modalEyebrow}>Periksa kembali pesanan Anda</span>
-            <h3 className={styles.modalTitle}>Konfirmasi Pesanan</h3>
-            <div className={styles.modalDivider} />
+            {/*
+              CONDITIONAL RENDERING MODAL
+              ─────────────────────────────────────────────────────────
+              Konsep: "Jika (isSuccess === true) tampilkan A, jika tidak tampilkan B"
 
-            {/* Data pemesan */}
-            <div className={styles.modalSection}>
-              <p className={styles.modalSectionLabel}>Data Pemesan</p>
-              <div className={styles.modalInfoGrid}>
-                <span className={styles.modalKey}>Nama</span>
-                <span className={styles.modalVal}>{name}</span>
-                <span className={styles.modalKey}>WhatsApp</span>
-                <span className={styles.modalVal}>{phone}</span>
-                <span className={styles.modalKey}>Alamat</span>
-                <span className={styles.modalVal}>{notes}</span>
+              isSuccess = false → tampilkan Ringkasan Pesanan (Order Summary)
+              isSuccess = true  → tampilkan layar Sukses yang elegan
+
+              Cara memicunya:
+                processFinalOrder() berhasil → setIsSuccess(true) → render berubah
+                Tombol "KEMBALI KE MENU"    → handleCloseSuccess() → semuanya reset
+            */}
+            {isSuccess ? (
+              /* ── Tampilan Sukses ── */
+              <div className={styles.modalSuccessView}>
+                <span className={styles.modalSuccessIcon}>✓</span>
+                <h3 className={styles.modalSuccessTitle}>Terima Kasih.</h3>
+                <p className={styles.modalSuccessText}>
+                  Pesanan Anda telah masuk ke sistem kami.
+                  <br />
+                  Barista akan segera memprosesnya.
+                </p>
+                <button
+                  className={styles.modalBtnPrimary}
+                  onClick={handleCloseSuccess}
+                >
+                  Kembali ke Menu
+                </button>
               </div>
-            </div>
+            ) : (
+              /* ── Tampilan Ringkasan Pesanan (default) ── */
+              <>
+                <span className={styles.modalEyebrow}>Periksa kembali pesanan Anda</span>
+                <h3 className={styles.modalTitle}>Konfirmasi Pesanan</h3>
+                <div className={styles.modalDivider} />
 
-            <div className={styles.modalDivider} />
-
-            {/* Daftar item pesanan */}
-            <div className={styles.modalSection}>
-              <p className={styles.modalSectionLabel}>Daftar Pesanan</p>
-              {/*
-                map() pada filledItems (bukan orderItems) agar baris kosong
-                tidak ikut tampil di ringkasan. Setiap baris menampilkan:
-                nama kopi, jumlah, dan subtotal.
-              */}
-              {filledItems.map((item, i) => {
-                const product = PRODUCTS.find(p => p.id === item.productId);
-                const subtotal = product ? product.price * Number(item.quantity) : 0;
-                return (
-                  <div key={i} className={styles.modalItemRow}>
-                    <span className={styles.modalItemName}>{product?.name}</span>
-                    <span className={styles.modalItemQty}>×{item.quantity}</span>
-                    <span className={styles.modalItemPrice}>{formatRupiah(subtotal)}</span>
+                <div className={styles.modalSection}>
+                  <p className={styles.modalSectionLabel}>Data Pemesan</p>
+                  <div className={styles.modalInfoGrid}>
+                    <span className={styles.modalKey}>Nama</span>
+                    <span className={styles.modalVal}>{name}</span>
+                    <span className={styles.modalKey}>WhatsApp</span>
+                    <span className={styles.modalVal}>{phone}</span>
+                    <span className={styles.modalKey}>Alamat</span>
+                    <span className={styles.modalVal}>{notes}</span>
                   </div>
-                );
-              })}
-            </div>
+                </div>
 
-            <div className={styles.modalDivider} />
+                <div className={styles.modalDivider} />
 
-            {/* Total harga */}
-            <div className={styles.modalTotalRow}>
-              <span className={styles.modalTotalLabel}>Total</span>
-              <span className={styles.modalTotalPrice}>{formatRupiah(totalPrice)}</span>
-            </div>
+                <div className={styles.modalSection}>
+                  <p className={styles.modalSectionLabel}>Daftar Pesanan</p>
+                  {filledItems.map((item, i) => {
+                    const product = PRODUCTS.find(p => p.id === item.productId);
+                    const subtotal = product ? product.price * Number(item.quantity) : 0;
+                    return (
+                      <div key={i} className={styles.modalItemRow}>
+                        <span className={styles.modalItemName}>{product?.name}</span>
+                        <span className={styles.modalItemQty}>×{item.quantity}</span>
+                        <span className={styles.modalItemPrice}>{formatRupiah(subtotal)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
 
-            {/* Tombol aksi */}
-            <div className={styles.modalActions}>
-              {/* Tombol 1: kembali ke form untuk mengedit */}
-              <button
-                className={styles.modalBtnSecondary}
-                onClick={() => setIsConfirmModalOpen(false)}
-              >
-                Kembali / Edit
-              </button>
+                <div className={styles.modalDivider} />
 
-              {/* Tombol 2: konfirmasi dan proses pesanan */}
-              <button
-                className={styles.modalBtnPrimary}
-                onClick={processFinalOrder}
-                disabled={isSubmitting} // Disable jika sedang mengirim
-              >
-                {isSubmitting ? 'Memproses...' : 'Konfirmasi & Pesan'}
-              </button>
-            </div>
+                <div className={styles.modalTotalRow}>
+                  <span className={styles.modalTotalLabel}>Total</span>
+                  <span className={styles.modalTotalPrice}>{formatRupiah(totalPrice)}</span>
+                </div>
+
+                <div className={styles.modalActions}>
+                  <button
+                    className={styles.modalBtnSecondary}
+                    onClick={() => setIsConfirmModalOpen(false)}
+                    disabled={isSubmitting}
+                  >
+                    Kembali / Edit
+                  </button>
+                  <button
+                    className={styles.modalBtnPrimary}
+                    onClick={processFinalOrder}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Memproses...' : 'Konfirmasi & Pesan'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
