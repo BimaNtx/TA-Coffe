@@ -14,6 +14,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './OrderForm.module.css';
 
+import { supabase } from '../supabaseClient';
+
 // ─────────────────────────────────────────────────────────────
 // DATA PRODUK (siap diganti dengan fetch dari database)
 // ─────────────────────────────────────────────────────────────
@@ -88,6 +90,9 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
    * Diubah ke false saat user klik "KEMBALI / EDIT" di dalam modal.
    */
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  // State loading saat sedang mengirim data ke Supabase
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ─────────────────────────────────────────────────────────────
   // FUNGSI MANIPULASI ARRAY orderItems
@@ -216,25 +221,51 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
   /**
    * processFinalOrder — dipanggil saat user klik "KONFIRMASI & PESAN" di modal
    *
-   * Ini adalah tahap akhir: data benar-benar diproses/dikirim.
-   * Saat ini hanya mencetak ke console, nanti akan diganti fetch() ke API.
+   * Fungsi ini diubah menjadi async agar bisa melakukan request
+   * database secara asynchronous tanpa membuat browser hang.
    */
-  const processFinalOrder = () => {
-    const orderPayload = {
-      name,
-      phone,
-      notes,
-      items:      filledItems,
-      totalPrice,
-    };
+  const processFinalOrder = async () => {
+    setIsSubmitting(true); // Aktifkan indikator loading
 
-    console.log('Data pesanan final:', orderPayload);
+    try {
+      // Siapkan payload dengan nama key persis dengan kolom Supabase
+      const payloadData = {
+        nama: name,
+        nomor_wa: phone,
+        alamat: notes,
+        detail_pesanan: filledItems, // otomatis dikonversi ke format JSONB oleh Supabase
+        total_harga: totalPrice
+      };
 
-    // TODO: ganti dengan fetch('/api/orders', { method: 'POST', body: JSON.stringify(orderPayload) })
+      console.log('Mengirim ke Supabase:', payloadData);
 
-    // Tutup modal, lalu tampilkan pesan sukses
-    setIsConfirmModalOpen(false);
-    setIsSubmitted(true);
+      // Lakukan operasi INSERT data ke tabel `pesanan`
+      const { error } = await supabase
+        .from('pesanan')
+        .insert([payloadData]);
+
+      if (error) throw error; // Lempar ke blok catch jika ada error dari server
+
+      // ── Jika sukses ──
+      alert('Pesanan berhasil diterima! Barista kami akan segera memprosesnya.');
+      
+      // Reset semua input kembali ke nilai default asli
+      setName('');
+      setPhone('');
+      setNotes('');
+      setOrderItems([{ productId: '', quantity: 1 }]);
+      
+      setIsConfirmModalOpen(false); // Tutup modal
+      setIsSubmitted(true);         // Tampilkan layar sukses
+
+    } catch (err) {
+      console.error('Database Error:', err);
+      // Tangkap dan tunjukkan kepada pengguna pesannya
+      alert('Terjadi kesalahan: ' + err.message);
+    } finally {
+      // Pastikan state diubah di akhir baik terjadi error atau berhasil
+      setIsSubmitting(false);
+    }
   };
 
   // ─────────────────────────────────────────────────────────────
@@ -559,8 +590,9 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
               <button
                 className={styles.modalBtnPrimary}
                 onClick={processFinalOrder}
+                disabled={isSubmitting} // Disable jika sedang mengirim
               >
-                Konfirmasi &amp; Pesan
+                {isSubmitting ? 'Memproses...' : 'Konfirmasi & Pesan'}
               </button>
             </div>
           </div>

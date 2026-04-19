@@ -17,20 +17,28 @@ import styles from './Footer.module.css';
 // Dipisah sebagai konstanta agar mudah diubah
 // ─────────────────────────────────────────────────────────────
 const NAV_LINKS = [
-  { label: 'Shop',    href: '#shop'    },
-  { label: 'Story',   href: '#story'   },
-  { label: 'Contact', href: '#order'   },
+  { label: 'Shop',    href: '#order'   }, // Memanggil Form Pemesanan
+  { label: 'Story',   href: '#story'   }, // Menuju bagian Intro
+  { label: 'Contact', href: '#contact' }, // Menuju Footer ini sendiri
 ];
 
 const SOCIAL_LINKS = [
   { label: 'Instagram', href: 'https://instagram.com' },
-  { label: 'WhatsApp',  href: 'https://wa.me/6281234567890' },
+  {
+    label: 'WhatsApp',
+    // Menggunakan API resmi wa.me agar otomatis membuka aplikasi WhatsApp
+    // Format: wa.me/kodenegaranomor (62 untuk Indonesia, tanpa angka 0 di awal)
+    href: 'https://wa.me/6281234567890'
+  },
 ];
 
 // ─────────────────────────────────────────────────────────────
 // HELPER: scroll ke atas halaman
-// window.scrollTo dengan behavior: 'smooth' membuat
-// animasi scroll halus tanpa library tambahan
+//
+// Cara kerja window.scrollTo:
+//   top: 0             -> menggulir dokumen kembali ke titik 0px (paling atas)
+//   behavior: 'smooth' -> menciptakan efek guliran animasi yang mulus
+// Fungsi bawaan browser ini sangat praktis, tidak butuh library eksternal.
 // ─────────────────────────────────────────────────────────────
 const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -76,7 +84,7 @@ const Footer = () => (
                 href={link.href}
                 className={styles.link}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
               >
                 {link.label} ↗
               </a>
