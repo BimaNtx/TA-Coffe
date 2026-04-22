@@ -1,142 +1,188 @@
 /**
  * AuthPage.jsx
  *
- * Halaman Autentikasi (Login & Register) berdesain premium.
+ * Halaman Login Admin — Bima Coffee
  *
- * Konsep React untuk Laporan RPL:
- *   1. useState (Boolean) — mengontrol state toggle "Login" atau "Register"
- *   2. Conditional Rendering — mengubah form input dan judul berdasarkan state
- *   3. Event Handler — e.preventDefault() menangani submit formulir
+ * Konsep React & Keamanan untuk Laporan RPL:
+ *   1. async/await   — menunggu respons API Supabase tanpa membekukan UI
+ *   2. try/catch     — menangani error: email salah, password salah, dll
+ *   3. finally       — memastikan loading SELALU dimatikan setelah proses selesai
+ *   4. Supabase Auth — signInWithPassword(email, password) untuk autentikasi
+ *
+ * Catatan Keamanan (untuk laporan):
+ *   Fitur Register sengaja dihapus dari UI ini.
+ *   Pembuatan akun admin hanya bisa dilakukan melalui Supabase Dashboard
+ *   (Authentication → Users → Invite User) agar tidak sembarangan orang
+ *   bisa membuat akun admin secara mandiri.
  */
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { supabase } from '../supabaseClient';
 import styles from './AuthPage.module.css';
 
 const AuthPage = ({ navigateTo }) => {
-  /**
-   * STATE TOGGLE: isLogin
-   *
-   * Bernilai 'true'  -> Menampilkan form masuk (Login)
-   * Bernilai 'false' -> Menampilkan form daftar (Register)
-   * State ini akan dibalik nilainya saat user mengklik teks di bagian bawah.
-   */
-  const [isLogin, setIsLogin] = useState(true);
 
-  // State untuk data input form
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  // ─────────────────────────────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────────────────────────────
+
+  // Nilai input form — terhubung ke value dan onChange setiap <input>
+  const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
 
   /**
-   * handleAuth
-   * Mencegah halaman reload saat form dikirimkan (default behavior form HTML),
-   * lalu menampilkan alert dummy sebagai simulasi sukses.
+   * isSubmitting — true saat menunggu respons dari Supabase
+   * Menonaktifkan tombol login agar tidak bisa diklik dua kali (double submit).
    */
-  const handleAuth = (e) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /**
+   * errorMessage — menyimpan pesan error dari Supabase (jika login gagal)
+   * Contoh pesan: "Invalid login credentials" → tampil sebagai teks merah.
+   */
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // ─────────────────────────────────────────────────────────────
+  // FUNGSI LOGIN
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * handleAuth — dijalankan saat form di-submit
+   *
+   * Alur:
+   *   1. Cegah reload halaman
+   *   2. Aktifkan loading, kosongkan error lama
+   *   3. Panggil supabase.auth.signInWithPassword()
+   *   4. Berhasil → pindah ke Admin Dashboard
+   *   5. Gagal    → tampilkan pesan error
+   *   6. Matikan loading (selalu, via finally)
+   */
+  const handleAuth = async (e) => {
     e.preventDefault();
-    // Simulasi login sukses: langsung pindah ke halaman Admin Dashboard
-    // Nanti ganti dengan validasi username + password dari Supabase
-    navigateTo('admin');
+
+    setIsSubmitting(true);
+    setErrorMessage('');
+
+    try {
+      // ── Pemanggilan API Supabase ───────────────────────────
+      // signInWithPassword() mencocokkan email & password dengan
+      // data di tabel auth.users milik Supabase.
+      // Jika cocok, Supabase mengembalikan session token secara otomatis.
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        // Login gagal — tampilkan pesan error dari Supabase
+        setErrorMessage(error.message);
+      } else {
+        // Login berhasil — arahkan ke halaman Admin Dashboard
+        navigateTo('admin');
+      }
+
+    } catch (err) {
+      // Tangkap error tak terduga (misal: tidak ada koneksi internet)
+      setErrorMessage('Terjadi kesalahan. Periksa koneksi internet Anda.');
+
+    } finally {
+      // finally selalu berjalan, baik login berhasil maupun gagal
+      setIsSubmitting(false);
+    }
   };
 
+  // ─────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────
   return (
     <section className={styles.authContainer}>
       {/* Efek dekorasi cahaya tipis di background */}
       <div className={styles.ambientLight}></div>
 
-      {/* Wrapper form dengan animasi masuk */}
+      {/* Card login dengan animasi masuk dari bawah */}
       <motion.div
         className={styles.authCard}
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       >
+        {/* Header */}
         <div className={styles.cardHeader}>
           <h1 className={styles.brandTitle}>Bima Coffee</h1>
-          <p className={styles.subtitle}>
-            {isLogin ? 'Masuk ke akun Anda' : 'Bergabunglah bersama kami'}
-          </p>
+          <p className={styles.subtitle}>Masuk ke panel admin</p>
         </div>
 
-        {/* 
-          AnimatePresence + motion.form memungkinkan animasi transisi 
-          saat form berubah dari Login ke Register 
-        */}
-        <AnimatePresence mode="wait">
-          <motion.form
-            key={isLogin ? 'login' : 'register'}
-            className={styles.formGroup}
-            onSubmit={handleAuth}
-            initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
-            transition={{ duration: 0.4 }}
-          >
-            {/* Input Nama (Hanya tampil di mode Register) */}
-            {!isLogin && (
-              <div className={styles.inputWrap}>
-                <label htmlFor="name" className={styles.label}>Nama Lengkap</label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={styles.inputField}
-                  placeholder="Masukkan nama lengkap"
-                  required
-                />
-              </div>
-            )}
+        {/* Form Login */}
+        <form className={styles.formGroup} onSubmit={handleAuth}>
 
-            <div className={styles.inputWrap}>
-              <label htmlFor="email" className={styles.label}>Email</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={styles.inputField}
-                placeholder="nama@email.com"
-                required
-              />
-            </div>
+          <div className={styles.inputWrap}>
+            <label htmlFor="email" className={styles.label}>Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErrorMessage(''); // bersihkan error saat user mengetik ulang
+              }}
+              className={styles.inputField}
+              placeholder="admin@email.com"
+              required
+            />
+          </div>
 
-            <div className={styles.inputWrap}>
-              <label htmlFor="password" className={styles.label}>Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={styles.inputField}
-                placeholder="Minimal 8 karakter"
-                required
-              />
-            </div>
+          <div className={styles.inputWrap}>
+            <label htmlFor="password" className={styles.label}>Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setErrorMessage(''); // bersihkan error saat user mengetik ulang
+              }}
+              className={styles.inputField}
+              placeholder="••••••••"
+              required
+            />
+          </div>
 
-            <button type="submit" className={styles.submitBtn}>
-              {isLogin ? 'MASUK' : 'DAFTAR'}
-            </button>
-          </motion.form>
-        </AnimatePresence>
-
-        <div className={styles.toggleWrap}>
-          {/* 
-            Bagian Toggle Mode
-            Mengubah nilai isLogin ke kebalikannya (!isLogin) saat teks diklik.
+          {/*
+            Pesan Error dari Supabase
+            Hanya muncul jika errorMessage tidak kosong.
+            ⚠ sebagai penanda visual agar mudah diperhatikan.
           */}
-          <p className={styles.toggleText}>
-            {isLogin ? "Belum punya akun? " : "Sudah punya akun? "}
-            <button
-              type="button"
-              className={styles.toggleBtn}
-              onClick={() => setIsLogin(!isLogin)}
-            >
-              {isLogin ? 'Buat di sini.' : 'Masuk di sini.'}
-            </button>
-          </p>
-          {/* Kembali ke halaman utama tanpa login */}
+          {errorMessage && (
+            <p style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize:   '0.75rem',
+              color:      '#ff6b6b',
+              margin:     '0 0 0.75rem 0',
+              letterSpacing: '0.02em',
+              lineHeight: '1.5',
+            }}>
+              ⚠ {errorMessage}
+            </p>
+          )}
+
+          {/*
+            Tombol Submit
+            disabled saat isSubmitting = true → mencegah double-click
+            Teks berubah menjadi "MEMPROSES..." sebagai feedback visual ke user
+          */}
+          <button
+            type="submit"
+            className={styles.submitBtn}
+            disabled={isSubmitting}
+            style={{
+              opacity: isSubmitting ? 0.6 : 1,
+              cursor:  isSubmitting ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {isSubmitting ? 'MEMPROSES...' : 'MASUK'}
+          </button>
+        </form>
+
+        {/* Tombol kembali ke halaman utama */}
+        <div className={styles.toggleWrap}>
           <button
             type="button"
             className={styles.toggleBtn}
