@@ -19,58 +19,17 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from './ProductCatalog.module.css';
 
-// ─────────────────────────────────────────────────────────────
-// DATA PRODUK
-// Setiap `id` harus cocok persis dengan PRODUCTS di OrderForm.jsx
-// agar dropdown form bisa terisi otomatis.
-// ─────────────────────────────────────────────────────────────
-const products = [
-  {
-    id:          'semeru-espresso',
-    name:        'Semeru Espresso',
-    origin:      'Lumajang, East Java',
-    price:       'Rp 85.000',
-    weight:      '200g',
-    notes:       'Dark Chocolate · Full Body · Bold',
-    description: 'Dark roast dengan karakter bold dan full body. Cocok untuk espresso shot maupun manual brew yang kuat.',
-    image:       '/bag1.png',
-  },
-  {
-    id:          'mandheling-gayo',
-    name:        'Mandheling Gayo',
-    origin:      'Aceh Tengah, Sumatra',
-    price:       'Rp 90.000',
-    weight:      '200g',
-    notes:       'Earthy · Cedar · Complex Spice',
-    description: 'Medium-dark roast dengan kompleksitas tinggi. Proses wet-hull menghasilkan karakter earthy khas Sumatra.',
-    image:       '/bag2.png',
-  },
-  {
-    id:          'toraja-kalosi',
-    name:        'Toraja Kalosi',
-    origin:      'Tana Toraja, Sulawesi',
-    price:       'Rp 95.000',
-    weight:      '200g',
-    notes:       'Caramelized Sugar · Smooth · Nutty',
-    description: 'Medium roast yang smooth dan round. Natural process menghasilkan sweetness alami yang menonjol.',
-    image:       '/bag1.png',
-  },
-];
+// Helper: format harga dari angka ke Rupiah — contoh: 85000 → "Rp 85.000"
+const formatHarga = (num) => 'Rp ' + Number(num).toLocaleString('id-ID');
 
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN: ProductCard — satu kartu per produk
 // ─────────────────────────────────────────────────────────────
 const ProductCard = ({ product, index, onSelect }) => {
+  const tersedia = product.is_available !== false; // default anggap tersedia
 
-  /**
-   * handleOrder — dipanggil saat tombol "PESAN SEKARANG" diklik
-   *
-   * Cukup panggil onSelect(product.id).
-   * Logika Smart Add (cek duplikat, isi baris kosong, tambah baris baru)
-   * dan scroll ke form semuanya sudah diurus oleh smartAddProduct() di App.jsx.
-   */
   const handleOrder = () => {
-    onSelect(product.id);
+    if (tersedia) onSelect(product.id);
   };
 
   return (
@@ -84,30 +43,38 @@ const ProductCard = ({ product, index, onSelect }) => {
     >
       <div className={styles.cardImage}>
         <img
-          src={product.image}
+          src={product.image_url || '/bag1.png'}
           alt={`Foto ${product.name}`}
           className={styles.productImg}
           loading="lazy"
         />
+        {/* Badge "Habis" jika stok tidak tersedia */}
+        {!tersedia && (
+          <span style={{
+            position: 'absolute', top: '0.75rem', right: '0.75rem',
+            background: 'rgba(0,0,0,0.75)', color: '#ff6b6b',
+            fontSize: '0.65rem', letterSpacing: '0.12em',
+            padding: '0.25rem 0.6rem', borderRadius: '3px',
+          }}>HABIS</span>
+        )}
       </div>
 
       <div className={styles.cardBody}>
-        <span className={styles.originTag}>{product.origin}</span>
-        <h3   className={styles.productName}>{product.name}</h3>
-        <p    className={styles.tastingNotes}>{product.notes}</p>
-        <p    className={styles.productDesc}>{product.description}</p>
+        <h3 className={styles.productName}>{product.name}</h3>
 
         <div className={styles.cardFooter}>
           <div className={styles.priceBlock}>
-            <span className={styles.price}>{product.price}</span>
-            <span className={styles.weight}>{product.weight}</span>
+            {/* product.price dari Supabase adalah angka, diformat ke Rupiah */}
+            <span className={styles.price}>{formatHarga(product.price)}</span>
           </div>
           <button
             className={styles.orderBtn}
             onClick={handleOrder}
-            aria-label={`Pesan ${product.name}`}
+            disabled={!tersedia}
+            aria-label={tersedia ? `Pesan ${product.name}` : `${product.name} sedang habis`}
+            style={{ opacity: tersedia ? 1 : 0.45, cursor: tersedia ? 'pointer' : 'not-allowed' }}
           >
-            Pesan Sekarang
+            {tersedia ? 'Pesan Sekarang' : 'Habis'}
           </button>
         </div>
       </div>
@@ -118,7 +85,7 @@ const ProductCard = ({ product, index, onSelect }) => {
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA: ProductCatalog
 // ─────────────────────────────────────────────────────────────
-const ProductCatalog = ({ onSelectProduct }) => {
+const ProductCatalog = ({ products = [], onSelectProduct }) => {
 
   /**
    * isModalOpen — state yang mengontrol tampil/tidaknya modal

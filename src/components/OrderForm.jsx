@@ -16,17 +16,8 @@ import styles from './OrderForm.module.css';
 
 import { supabase } from '../supabaseClient';
 
-// ─────────────────────────────────────────────────────────────
-// DATA PRODUK (siap diganti dengan fetch dari database)
-// ─────────────────────────────────────────────────────────────
-const PRODUCTS = [
-  { id: 'semeru-espresso', name: 'Semeru Espresso',  price: 85000 },
-  { id: 'mandheling-gayo', name: 'Mandheling Gayo',  price: 90000 },
-  { id: 'toraja-kalosi',   name: 'Toraja Kalosi',    price: 95000 },
-];
-
 // Helper: format angka ke format Rupiah — contoh: 85000 → "Rp 85.000"
-const formatRupiah = (num) => 'Rp ' + num.toLocaleString('id-ID');
+const formatRupiah = (num) => 'Rp ' + Number(num).toLocaleString('id-ID');
 
 // ─────────────────────────────────────────────────────────────
 // PESAN SUKSES — ditampilkan setelah pesanan berhasil dikonfirmasi
@@ -53,6 +44,7 @@ const SuccessMessage = () => (
 // ─────────────────────────────────────────────────────────────
 /**
  * Props yang diterima dari App.jsx:
+ *   @prop {Array}    products      — daftar produk dari Supabase (via App.jsx)
  *   @prop {Array}    orderItems    — array baris pesanan (state dari App.jsx)
  *   @prop {function} setOrderItems — fungsi updater untuk mengubah array tsb
  *
@@ -60,7 +52,7 @@ const SuccessMessage = () => (
  * Karena state-nya sudah "diangkat" ke App.jsx (state lifting) agar
  * ProductCatalog dan OrderForm bisa berbagi data yang sama.
  */
-const OrderForm = ({ orderItems, setOrderItems }) => {
+const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
   // State lokal: hanya dibutuhkan oleh form ini, tidak dibagikan ke komponen lain
   const [name,  setName]  = useState('');
 
@@ -176,7 +168,7 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
   // ─────────────────────────────────────────────────────────────
 
   // isMaxItems: apakah semua varian produk sudah ada di baris pesanan?
-  const isMaxItems = orderItems.length >= PRODUCTS.length;
+  const isMaxItems = orderItems.length >= products.length;
 
   /**
    * filledItems — hanya baris yang sudah dipilih kopinya
@@ -192,7 +184,7 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
 
   // totalPrice — total harga: cari harga per produk, kalikan quantity, lalu jumlahkan
   const totalPrice = filledItems.reduce((sum, item) => {
-    const product = PRODUCTS.find(p => p.id === item.productId);
+    const product = products.find(p => p.id === item.productId);
     return sum + (product ? product.price * Number(item.quantity) : 0);
   }, 0);
 
@@ -322,7 +314,7 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
             Gratis ongkir untuk wilayah Lumajang.
           </p>
           <ul className={styles.productList}>
-            {PRODUCTS.map(p => (
+            {products.map(p => (
               <li key={p.id}>
                 {p.name} — {formatRupiah(p.price)}
               </li>
@@ -426,7 +418,7 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
                           aria-label={`Produk baris ${index + 1}`}
                         >
                           <option value="">— Pilih kopi —</option>
-                          {PRODUCTS.map(p => {
+                          {products.map(p => {
                             /**
                              * Cek duplikasi: apakah produk ini sudah dipilih di baris lain?
                              * some() mengembalikan true jika ada baris LAIN (bukan baris ini)
@@ -599,7 +591,7 @@ const OrderForm = ({ orderItems, setOrderItems }) => {
                 <div className={styles.modalSection}>
                   <p className={styles.modalSectionLabel}>Daftar Pesanan</p>
                   {filledItems.map((item, i) => {
-                    const product = PRODUCTS.find(p => p.id === item.productId);
+                    const product = products.find(p => p.id === item.productId);
                     const subtotal = product ? product.price * Number(item.quantity) : 0;
                     return (
                       <div key={i} className={styles.modalItemRow}>

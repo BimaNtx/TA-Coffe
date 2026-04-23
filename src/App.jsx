@@ -15,6 +15,7 @@
  */
 
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
 import { useScroll, useTransform, useSpring, motion } from 'framer-motion';
 
 import Navbar          from './components/Navbar';
@@ -41,14 +42,17 @@ const SPRING        = { stiffness: 400, damping: 40, mass: 1, restDelta: 0.001 }
 // ─────────────────────────────────────────────────────────────
 /**
  * LandingPageView menerima props dari App:
- *   @prop {function} navigateTo   — fungsi berpindah halaman
- *   @prop {Array}    orderItems   — state pesanan bersama
+ *   @prop {function} navigateTo
+ *   @prop {Array}    products        — daftar produk dari Supabase
+ *   @prop {Array}    orderItems
  *   @prop {function} setOrderItems
  *   @prop {function} smartAddProduct
- *   @prop {object}   logoRef      — ref untuk animasi logo
- *   @prop {object}   y, scale     — nilai animasi dari framer-motion
+ *   @prop {object}   logoRef, y, scale, scrollY
  */
-const LandingPageView = ({ navigateTo, orderItems, setOrderItems, smartAddProduct, logoRef, y, scale, scrollY }) => (
+const LandingPageView = ({
+  navigateTo, products, orderItems, setOrderItems,
+  smartAddProduct, logoRef, y, scale, scrollY
+}) => (
   <div
     className="app-container"
     style={{ minHeight: '100vh', position: 'relative', backgroundColor: '#000000' }}
@@ -66,13 +70,11 @@ const LandingPageView = ({ navigateTo, orderItems, setOrderItems, smartAddProduc
     <Hero />
     <IntroSection />
     <BeanSection />
-    <ProductCatalog onSelectProduct={smartAddProduct} />
-    <OrderForm orderItems={orderItems} setOrderItems={setOrderItems} />
 
-    {/*
-      Footer menerima navigateTo agar bisa menampilkan
-      link tersembunyi "Admin Console" untuk berpindah ke halaman auth.
-    */}
+    {/* products diteruskan agar katalog dan form memakai data live dari database */}
+    <ProductCatalog products={products} onSelectProduct={smartAddProduct} />
+    <OrderForm products={products} orderItems={orderItems} setOrderItems={setOrderItems} />
+
     <Footer navigateTo={navigateTo} />
   </div>
 );
@@ -142,6 +144,29 @@ function App() {
     }
   }, []);
 
+  // ── State Produk (dari Supabase) ─────────────────────────
+
+  /**
+   * products — daftar produk live dari tabel `produk` di Supabase
+   * Digunakan oleh ProductCatalog (kartu) dan OrderForm (dropdown).
+   * Disimpan di App agar AdminDashboard bisa memperbarui via onProductsChange.
+   */
+  const [products,          setProducts]          = useState([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  const fetchProducts = async () => {
+    setIsLoadingProducts(true);
+    const { data, error } = await supabase
+      .from('produk')
+      .select('*')
+      .order('name', { ascending: true });
+    if (!error) setProducts(data ?? []);
+    setIsLoadingProducts(false);
+  };
+
+  // Muat produk sekali saat komponen pertama kali dirender
+  useEffect(() => { fetchProducts(); }, []);
+
   // ── State Lifting: orderItems ─────────────────────────────
   const [orderItems, setOrderItems] = useState([{ productId: '', quantity: 1 }]);
 
@@ -161,7 +186,7 @@ function App() {
         );
       }
 
-      const MAKS_PRODUK = 3;
+      const MAKS_PRODUK = products.length || 3; // ikuti jumlah produk aktual dari database
       if (prev.length < MAKS_PRODUK) {
         return [...prev, { productId: selectedId, quantity: 1 }];
       }
@@ -208,14 +233,20 @@ function App() {
   }
 
   if (currentView === 'admin') {
-    // Halaman Admin Console
-    return <AdminDashboard navigateTo={navigateTo} />;
+    return (
+      <AdminDashboard
+        navigateTo={navigateTo}
+        products={products}
+        onProductsChange={fetchProducts}
+      />
+    );
   }
 
   // Default: Halaman Landing Page
   return (
     <LandingPageView
       navigateTo={navigateTo}
+      products={products}
       orderItems={orderItems}
       setOrderItems={setOrderItems}
       smartAddProduct={smartAddProduct}
