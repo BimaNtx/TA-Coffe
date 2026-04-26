@@ -44,13 +44,14 @@ const SPRING        = { stiffness: 400, damping: 40, mass: 1, restDelta: 0.001 }
  * LandingPageView menerima props dari App:
  *   @prop {function} navigateTo
  *   @prop {Array}    products        — daftar produk dari Supabase
+ *   @prop {object}   globalSettings  — pengaturan pajak dari Supabase
  *   @prop {Array}    orderItems
  *   @prop {function} setOrderItems
  *   @prop {function} smartAddProduct
  *   @prop {object}   logoRef, y, scale, scrollY
  */
 const LandingPageView = ({
-  navigateTo, products, orderItems, setOrderItems,
+  navigateTo, products, globalSettings, orderItems, setOrderItems,
   smartAddProduct, logoRef, y, scale, scrollY
 }) => (
   <div
@@ -59,7 +60,6 @@ const LandingPageView = ({
   >
     <Navbar scrollY={scrollY} navbarHeight={NAVBAR_HEIGHT} animEnd={ANIM_END} />
 
-    {/* Logo beranimasi: bergerak dari tengah layar ke tengah navbar */}
     <div className="logo-anchor">
       <motion.div ref={logoRef} className="logo-motion" style={{ y, scale }}>
         <span className="logo-line">BIMA</span>
@@ -71,9 +71,14 @@ const LandingPageView = ({
     <IntroSection />
     <BeanSection />
 
-    {/* products diteruskan agar katalog dan form memakai data live dari database */}
     <ProductCatalog products={products} onSelectProduct={smartAddProduct} />
-    <OrderForm products={products} orderItems={orderItems} setOrderItems={setOrderItems} />
+    {/* globalSettings diteruskan agar kalkulasi pajak menggunakan nilai dari database */}
+    <OrderForm
+      products={products}
+      globalSettings={globalSettings}
+      orderItems={orderItems}
+      setOrderItems={setOrderItems}
+    />
 
     <Footer navigateTo={navigateTo} />
   </div>
@@ -167,6 +172,34 @@ function App() {
   // Muat produk sekali saat komponen pertama kali dirender
   useEffect(() => { fetchProducts(); }, []);
 
+  // ── State Pengaturan Global (dari Supabase) ───────────────
+
+  /**
+   * globalSettings — konfigurasi aplikasi yang dikelola admin
+   * Diambil dari tabel `pengaturan` baris id=1 di Supabase.
+   *
+   * Struktur: { pajak_aktif: boolean, pajak_persen: number }
+   *
+   * Digunakan oleh OrderForm untuk kalkulasi otomatis tanpa
+   * membiarkan pelanggan mengubah pajak sendiri.
+   */
+  const [globalSettings, setGlobalSettings] = useState({
+    pajak_aktif: false,
+    pajak_persen: 11,
+  });
+
+  const fetchSettings = async () => {
+    const { data, error } = await supabase
+      .from('pengaturan')
+      .select('pajak_aktif, pajak_persen')
+      .eq('id', 1)
+      .single();
+    if (!error && data) setGlobalSettings(data);
+  };
+
+  // Muat pengaturan sekali saat mount, bersamaan dengan produk
+  useEffect(() => { fetchSettings(); }, []);
+
   // ── State Lifting: orderItems ─────────────────────────────
   const [orderItems, setOrderItems] = useState([{ productId: '', quantity: 1 }]);
 
@@ -238,6 +271,8 @@ function App() {
         navigateTo={navigateTo}
         products={products}
         onProductsChange={fetchProducts}
+        globalSettings={globalSettings}
+        onSettingsChange={fetchSettings}
       />
     );
   }
@@ -247,6 +282,7 @@ function App() {
     <LandingPageView
       navigateTo={navigateTo}
       products={products}
+      globalSettings={globalSettings}
       orderItems={orderItems}
       setOrderItems={setOrderItems}
       smartAddProduct={smartAddProduct}

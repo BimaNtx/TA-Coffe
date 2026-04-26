@@ -52,7 +52,7 @@ const SuccessMessage = () => (
  * Karena state-nya sudah "diangkat" ke App.jsx (state lifting) agar
  * ProductCatalog dan OrderForm bisa berbagi data yang sama.
  */
-const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
+const OrderForm = ({ products = [], globalSettings = {}, orderItems, setOrderItems }) => {
   // State lokal: hanya dibutuhkan oleh form ini, tidak dibagikan ke komponen lain
   const [name,  setName]  = useState('');
 
@@ -97,6 +97,21 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
    */
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // ── State POS Baru ────────────────────────────────────────
+  /**
+   * orderType — tipe transaksi: makan di tempat atau bawa pulang
+   */
+  const [orderType,     setOrderType]     = useState('TAKEAWAY');
+  const [tableNumber,   setTableNumber]   = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('CASH');
+
+  /**
+   * applyTax & paymentMethod dikelola di sini, BUKAN oleh pelanggan.
+   * Pajak dihitung otomatis dari globalSettings yang diatur Admin.
+   */
+
+
+
   /**
    * handleCloseSuccess — dipanggil HANYA saat user klik "KEMBALI KE MENU"
    * di tampilan sukses dalam modal.
@@ -109,13 +124,13 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
    * agar form tidak ikut terhapus saat user klik "Batal" di tengah proses.
    */
   const handleCloseSuccess = () => {
-    // Reset data pemesan
     setName('');
     setPhone('');
     setNotes('');
-    // Reset daftar item pesanan ke 1 baris kosong (nilai awal)
     setOrderItems([{ productId: '', quantity: 1 }]);
-    // Reset state modal
+    setOrderType('TAKEAWAY');
+    setTableNumber('');
+    setPaymentMethod('CASH');
     setIsSuccess(false);
     setIsConfirmModalOpen(false);
   };
@@ -167,26 +182,27 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
   // KALKULASI
   // ─────────────────────────────────────────────────────────────
 
-  // isMaxItems: apakah semua varian produk sudah ada di baris pesanan?
-  const isMaxItems = orderItems.length >= products.length;
-
-  /**
-   * filledItems — hanya baris yang sudah dipilih kopinya
-   * filter() membuang baris dengan productId kosong ('')
-   * agar baris kosong tidak ikut dihitung di totalQuantity & totalPrice.
-   */
+  const isMaxItems  = orderItems.length >= products.length;
   const filledItems = orderItems.filter(item => item.productId !== '');
 
-  // totalQuantity — jumlah semua item dari baris yang sudah terisi
   const totalQuantity = filledItems.reduce(
     (sum, item) => sum + Number(item.quantity), 0
   );
 
-  // totalPrice — total harga: cari harga per produk, kalikan quantity, lalu jumlahkan
-  const totalPrice = filledItems.reduce((sum, item) => {
+  /**
+   * subtotal  — harga sebelum pajak
+   * taxAmount — dihitung otomatis dari globalSettings (dikelola Admin)
+   *              Pelanggan tidak bisa mengubah nilai ini.
+   * totalPrice— nilai final yang dikirim ke database kolom `total_harga`
+   */
+  const subtotal    = filledItems.reduce((sum, item) => {
     const product = products.find(p => p.id === item.productId);
     return sum + (product ? product.price * Number(item.quantity) : 0);
   }, 0);
+  const taxAmount   = globalSettings.pajak_aktif
+    ? Math.round(subtotal * ((globalSettings.pajak_persen ?? 11) / 100))
+    : 0;
+  const totalPrice  = subtotal + taxAmount;
 
   // ─────────────────────────────────────────────────────────────
   // VALIDASI
@@ -201,8 +217,11 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
     const newErrors = {};
     if (!name.trim())  newErrors.name  = 'Nama wajib diisi.';
     if (!phone.trim()) newErrors.phone = 'Nomor WhatsApp wajib diisi.';
-    // Alamat wajib diisi agar barista tahu ke mana mengirim pesanan
-    if (!notes.trim()) newErrors.notes = 'Alamat pengiriman wajib diisi.';
+    if (!notes.trim()) newErrors.notes = 'Alamat / catatan wajib diisi.';
+    // Nomor meja wajib diisi jika tipe pesanan Dine In
+    if (orderType === 'DINE_IN' && !tableNumber.trim()) {
+      newErrors.tableNumber = 'Nomor meja wajib diisi untuk Dine In.';
+    }
     const hasEmpty = orderItems.some(item => !item.productId);
     if (hasEmpty) newErrors.items = 'Pilih kopi untuk semua baris.';
     return newErrors;
@@ -254,12 +273,22 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
     setIsSubmitting(true);
 
     try {
+      /**
+       * payloadData — objek yang dikirim ke tabel `pesanan` di Supabase
+       * Kolom baru: tipe_pesanan, nomor_meja, metode_bayar,
+       *             subtotal, pajak_ppn, total_harga
+       */
       const payloadData = {
-        nama: name,
-        nomor_wa: phone,
-        alamat: notes,
+        nama:           name,
+        nomor_wa:       phone,
+        alamat:         notes,
         detail_pesanan: filledItems,
-        total_harga: totalPrice
+        tipe_pesanan:   orderType,
+        nomor_meja:     orderType === 'DINE_IN' ? tableNumber : null,
+        metode_bayar:   paymentMethod,
+        subtotal:       subtotal,
+        pajak_ppn:      taxAmount,
+        total_harga:    totalPrice,
       };
 
       console.log('Mengirim ke Supabase:', payloadData);
@@ -391,6 +420,52 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
                   {errors.phone && <span className={styles.errorMsg}>{errors.phone}</span>}
                 </div>
 
+                {/* ── Tipe Pesanan (Toggle: Dine In / Takeaway) ──── */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label}>Tipe Pesanan</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    {['DINE_IN', 'TAKEAWAY'].map(type => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => { setOrderType(type); setTableNumber(''); }}
+                        style={{
+                          flex: 1, padding: '0.6rem', borderRadius: '4px',
+                          fontFamily: 'Inter, sans-serif', fontSize: '0.7rem',
+                          fontWeight: 500, letterSpacing: '0.1em', cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          background:   orderType === type ? '#ffffff' : 'transparent',
+                          color:        orderType === type ? '#000000' : 'rgba(255,255,255,0.4)',
+                          border: `1px solid ${orderType === type ? '#ffffff' : 'rgba(255,255,255,0.15)'}`,
+                        }}
+                      >
+                        {type === 'DINE_IN' ? '🪑 Dine In' : '🥡 Takeaway'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Nomor Meja (hanya muncul saat Dine In) ──────── */}
+                {orderType === 'DINE_IN' && (
+                  <div className={styles.fieldGroup}>
+                    <label htmlFor="tableNumber" className={styles.label}>
+                      Nomor Meja <span className={styles.required}>*</span>
+                    </label>
+                    <input
+                      id="tableNumber"
+                      type="text"
+                      value={tableNumber}
+                      onChange={e => {
+                        setTableNumber(e.target.value);
+                        clearError('tableNumber');
+                      }}
+                      className={`${styles.input} ${errors.tableNumber ? styles.inputError : ''}`}
+                      placeholder="Contoh: 5 atau A3"
+                    />
+                    {errors.tableNumber && <span className={styles.errorMsg}>{errors.tableNumber}</span>}
+                  </div>
+                )}
+
                 {/* ── Daftar item pesanan (dinamis) ───────── */}
                 <div className={styles.fieldGroup}>
                   <label className={styles.label}>
@@ -429,9 +504,16 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
                                 otherIndex !== index &&
                                 otherItem.productId === p.id
                             );
+                            // Produk juga di-disable jika stok habis
+                            const isUnavailable = p.is_available === false;
+                            const isDisabled = isDuplicate || isUnavailable;
                             return (
-                              <option key={p.id} value={p.id} disabled={isDuplicate}>
-                                {isDuplicate ? `${p.name} (Sudah dipilih)` : p.name}
+                              <option key={p.id} value={p.id} disabled={isDisabled}>
+                                {isUnavailable
+                                  ? `(Habis) ${p.name}`
+                                  : isDuplicate
+                                    ? `${p.name} (Sudah dipilih)`
+                                    : p.name}
                               </option>
                             );
                           })}
@@ -477,15 +559,25 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
                   </button>
                 </div>
 
-                {/* ── Ringkasan pesanan ───────────────────── */}
+                {/* ── Ringkasan Harga (otomatis, tidak bisa diubah pelanggan) ── */}
                 <div className={styles.summary}>
                   <span className={styles.summaryLabel}>
                     Total Item: <strong>{totalQuantity}</strong>
                   </span>
-                  {totalPrice > 0 && (
-                    <span className={styles.summaryPrice}>
-                      {formatRupiah(totalPrice)}
-                    </span>
+                  {subtotal > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'flex-end' }}>
+                      {globalSettings.pajak_aktif && (
+                        <>
+                          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
+                            Subtotal: {formatRupiah(subtotal)}
+                          </span>
+                          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(255,200,100,0.7)' }}>
+                            PPN {globalSettings.pajak_persen ?? 11}%: +{formatRupiah(taxAmount)}
+                          </span>
+                        </>
+                      )}
+                      <span className={styles.summaryPrice}>{formatRupiah(totalPrice)}</span>
+                    </div>
                   )}
                 </div>
 
@@ -506,6 +598,21 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
                     rows={3}
                   />
                   {errors.notes && <span className={styles.errorMsg}>{errors.notes}</span>}
+                </div>
+
+                {/* ── Metode Pembayaran ───────────────────────── */}
+                <div className={styles.fieldGroup}>
+                  <label htmlFor="paymentMethod" className={styles.label}>Metode Pembayaran</label>
+                  <select
+                    id="paymentMethod"
+                    value={paymentMethod}
+                    onChange={e => setPaymentMethod(e.target.value)}
+                    className={`${styles.input} ${styles.select}`}
+                  >
+                    <option value="CASH">💵 Cash</option>
+                    <option value="QRIS">📱 QRIS</option>
+                    <option value="DEBIT">💳 Kartu Debit</option>
+                  </select>
                 </div>
 
                 {/* Tombol buka Modal Konfirmasi */}
@@ -551,15 +658,34 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
                 Tombol "KEMBALI KE MENU"    → handleCloseSuccess() → semuanya reset
             */}
             {isSuccess ? (
-              /* ── Tampilan Sukses ── */
+              /* ── Tampilan Sukses — Instruksi ke Kasir ── */
               <div className={styles.modalSuccessView}>
                 <span className={styles.modalSuccessIcon}>✓</span>
-                <h3 className={styles.modalSuccessTitle}>Terima Kasih.</h3>
-                <p className={styles.modalSuccessText}>
-                  Pesanan Anda telah masuk ke sistem kami.
-                  <br />
-                  Barista akan segera memprosesnya.
-                </p>
+                <h3 className={styles.modalSuccessTitle}>Pesanan Terkirim!</h3>
+
+                {orderType === 'DINE_IN' ? (
+                  /*
+                   * DINE IN — instruksikan pelanggan ke kasir,
+                   * sebutkan nama, dan tunggu di meja.
+                   */
+                  <p className={styles.modalSuccessText}>
+                    Silakan ke kasir untuk membayar dengan{' '}
+                    <strong>{paymentMethod}</strong> dan sebutkan nama{' '}
+                    <strong>{name}</strong>.<br />
+                    Pesanan akan diantar ke{' '}
+                    <strong>Meja {tableNumber}</strong>.
+                  </p>
+                ) :
+                (
+                  /*
+                   * TAKEAWAY — instruksi yang sudah diperbarui dengan nama
+                   */
+                  <p className={styles.modalSuccessText}>
+                    Silakan ke kasir untuk membayar dengan <strong>{paymentMethod}</strong>. <br/>
+                    Gunakan nama <strong>{name}</strong> sebagai bukti pengambilan pesanan Anda.
+                  </p>
+                )}
+
                 <button
                   className={styles.modalBtnPrimary}
                   onClick={handleCloseSuccess}
@@ -572,6 +698,18 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
               <>
                 <span className={styles.modalEyebrow}>Periksa kembali pesanan Anda</span>
                 <h3 className={styles.modalTitle}>Konfirmasi Pesanan</h3>
+                <div className={styles.modalDivider} />
+
+                <div className={styles.modalSection}>
+                  <p className={styles.modalSectionLabel}>Info Transaksi</p>
+                  <div className={styles.modalInfoGrid}>
+                    <span className={styles.modalKey}>Tipe</span>
+                    <span className={styles.modalVal}>{orderType === 'DINE_IN' ? `Dine In — Meja ${tableNumber}` : 'Takeaway'}</span>
+                    <span className={styles.modalKey}>Pembayaran</span>
+                    <span className={styles.modalVal}>{paymentMethod}</span>
+                  </div>
+                </div>
+
                 <div className={styles.modalDivider} />
 
                 <div className={styles.modalSection}>
@@ -592,12 +730,12 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
                   <p className={styles.modalSectionLabel}>Daftar Pesanan</p>
                   {filledItems.map((item, i) => {
                     const product = products.find(p => p.id === item.productId);
-                    const subtotal = product ? product.price * Number(item.quantity) : 0;
+                    const itemSubtotal = product ? product.price * Number(item.quantity) : 0;
                     return (
                       <div key={i} className={styles.modalItemRow}>
                         <span className={styles.modalItemName}>{product?.name}</span>
                         <span className={styles.modalItemQty}>×{item.quantity}</span>
-                        <span className={styles.modalItemPrice}>{formatRupiah(subtotal)}</span>
+                        <span className={styles.modalItemPrice}>{formatRupiah(itemSubtotal)}</span>
                       </div>
                     );
                   })}
@@ -605,6 +743,16 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
 
                 <div className={styles.modalDivider} />
 
+                <div className={styles.modalTotalRow}>
+                  <span className={styles.modalTotalLabel}>Subtotal</span>
+                  <span className={styles.modalTotalPrice} style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>{formatRupiah(subtotal)}</span>
+                </div>
+                {globalSettings?.pajak_aktif && (
+                  <div className={styles.modalTotalRow}>
+                    <span className={styles.modalTotalLabel}>PPN 11%</span>
+                    <span className={styles.modalTotalPrice} style={{ fontSize: '0.85rem', color: 'rgba(255,200,100,0.7)' }}>+{formatRupiah(taxAmount)}</span>
+                  </div>
+                )}
                 <div className={styles.modalTotalRow}>
                   <span className={styles.modalTotalLabel}>Total</span>
                   <span className={styles.modalTotalPrice}>{formatRupiah(totalPrice)}</span>
@@ -631,6 +779,8 @@ const OrderForm = ({ products = [], orderItems, setOrderItems }) => {
           </div>
         </div>
       )}
+
+
 
     </section>
   );

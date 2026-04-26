@@ -1,0 +1,195 @@
+/*
+ * Receipt.css — Styling Struk Thermal Digital
+ *
+ * Konsep penting:
+ *   @media print   — blok CSS yang HANYA aktif saat browser mencetak.
+ *                    Semua elemen website disembunyikan kecuali struk.
+ *   @page           — mengatur ukuran & margin halaman cetak.
+ *
+ * Teknik:
+ *   1. Di layar  : #receipt-print-area { display: none }  → tersembunyi
+ *   2. Saat print: body > *          { display: none }  → semua disembunyi
+ *                  #receipt-print-area{ display: block } → hanya struk tampil
+ */
+
+/* ─────────────────────────────────────────────────────────────
+   LAYAR (SCREEN) — struk disembunyikan, hanya muncul saat print
+───────────────────────────────────────────────────────────── */
+#receipt-print-area {
+  display: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PRINT — semua elemen website disembunyikan, hanya struk tampil
+───────────────────────────────────────────────────────────── */
+@media print {
+
+  /* Atur ukuran halaman — 80mm lebar (standar printer thermal) */
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  /* Sembunyikan SEMUA elemen website */
+  body > *,
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Tampilkan HANYA area struk dan semua anaknya */
+  #receipt-print-area,
+  #receipt-print-area * {
+    visibility: visible !important;
+  }
+
+  /* Positioning: reset posisi agar struk berada di pojok kiri atas */
+  #receipt-print-area {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 80mm !important;
+    background: white !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   KOMPONEN STRUK — styling yang berlaku saat dicetak
+───────────────────────────────────────────────────────────── */
+
+/* Wrapper satu salinan struk */
+.rcpt-wrapper {
+  width: 76mm;
+  padding: 4mm 2mm;
+  background: #ffffff;
+  color: #000000;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10pt;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+/* ── Teks tengah (header & footer) ── */
+.rcpt-center {
+  text-align: center;
+  margin: 2mm 0;
+}
+
+.rcpt-brand {
+  font-size: 15pt;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  font-family: Georgia, serif;
+}
+
+.rcpt-tagline {
+  font-size: 8pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 1mm;
+}
+
+.rcpt-address {
+  font-size: 8pt;
+  color: #444;
+  margin-top: 0.5mm;
+}
+
+/* ── Garis pemisah ── */
+.rcpt-dashed {
+  border: none;
+  border-top: 1px dashed #000;
+  margin: 3mm 0;
+}
+
+.rcpt-dashed-bold {
+  border: none;
+  border-top: 2px solid #000;
+  margin: 3mm 0;
+}
+
+/* ── Meta info ── */
+.rcpt-meta {
+  margin-bottom: 2mm;
+}
+
+.rcpt-date {
+  font-size: 8pt;
+  color: #333;
+  margin-bottom: 1mm;
+}
+
+/* ── Baris dengan teks kiri-kanan (PadLine) ── */
+.rcpt-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4mm;
+  min-height: 5mm;
+}
+
+.rcpt-left {
+  flex: 1;
+  text-align: left;
+  word-break: break-word;
+}
+
+.rcpt-right {
+  text-align: right;
+  white-space: nowrap;
+  font-family: 'Courier New', monospace;
+}
+
+/* ── Daftar item ── */
+.rcpt-section-label {
+  font-weight: bold;
+  font-size: 8pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 1mm;
+  color: #333;
+}
+
+.rcpt-item {
+  margin-bottom: 2mm;
+}
+
+.rcpt-item-name {
+  font-weight: bold;
+  font-size: 10pt;
+}
+
+/* ── Footer teks ── */
+.rcpt-thankyou {
+  font-size: 9pt;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.rcpt-footer-note {
+  font-size: 7pt;
+  color: #666;
+  margin-top: 2mm;
+  font-style: italic;
+}
+
+/* ── Label salinan (PELANGGAN / DAPUR) ── */
+.rcpt-copy-label {
+  text-align: center;
+  font-size: 7.5pt;
+  letter-spacing: 0.1em;
+  color: #555;
+  margin-top: 3mm;
+  padding-top: 2mm;
+  border-top: 1px dotted #999;
+}
+
+/* ── Garis potong antar salinan ── */
+.rcpt-cut-line {
+  text-align: center;
+  font-size: 7pt;
+  color: #888;
+  padding: 4mm 0;
+  letter-spacing: 0.04em;
+  page-break-inside: avoid;
+}

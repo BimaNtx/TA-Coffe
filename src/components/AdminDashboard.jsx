@@ -84,13 +84,13 @@ const ProductFormModal = ({ initial, onSave, onClose }) => {
 
 const labelStyle = { display: 'block', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.4)', marginBottom: '0.4rem' };
 const inputStyle = { width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.6rem 0.8rem', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', boxSizing: 'border-box' };
-const btnPrimaryStyle = { flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
+const btnPrimaryStyle   = { flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
 const btnSecondaryStyle = { flex: 1, background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
 
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA
 // ─────────────────────────────────────────────────────────────
-const AdminDashboard = ({ navigateTo, products = [], onProductsChange }) => {
+const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSettings = {}, onSettingsChange }) => {
 
   // ── State Pesanan ─────────────────────────────────────────
   const [orders,   setOrders]   = useState([]);
@@ -98,17 +98,44 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  /**
+   * printOrder — pesanan yang sedang dicetak.
+   * null  = tidak ada yang dicetak.
+   * object = data pesanan yang dipilih kasir untuk dicetak.
+   */
+  const [printOrder, setPrintOrder] = useState(null);
+
   // ── State Tab ─────────────────────────────────────────────
   /**
    * activeTab — mengontrol tab yang aktif di dashboard
-   * 'orders'  → tampilkan tabel pesanan
-   * 'menu'    → tampilkan tabel kelola menu (CRUD produk)
+   * 'orders'   → tabel pesanan
+   * 'menu'     → kelola produk (CRUD)
+   * 'settings' → pengaturan global (pajak)
    */
   const [activeTab, setActiveTab] = useState('orders');
 
   // ── State Modal Produk ────────────────────────────────────
   const [showProductModal, setShowProductModal] = useState(false);
-  const [editingProduct,   setEditingProduct]   = useState(null); // null = mode tambah
+  const [editingProduct,   setEditingProduct]   = useState(null);
+
+  // ── State Pengaturan Lokal ─────────────────────────────────
+  /**
+   * localSettings — salinan sementara globalSettings untuk form edit.
+   * Perubahan di sini belum disimpan ke DB sampai admin klik "Simpan".
+   */
+  const [localSettings, setLocalSettings] = useState({
+    pajak_aktif:  globalSettings.pajak_aktif  ?? false,
+    pajak_persen: globalSettings.pajak_persen ?? 11,
+  });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Sinkronkan localSettings saat globalSettings dari App berubah
+  useEffect(() => {
+    setLocalSettings({
+      pajak_aktif:  globalSettings.pajak_aktif  ?? false,
+      pajak_persen: globalSettings.pajak_persen ?? 11,
+    });
+  }, [globalSettings.pajak_aktif, globalSettings.pajak_persen]);
 
   // ─────────────────────────────────────────────────────────
   // FETCH PESANAN
@@ -130,13 +157,58 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange }) => {
   // ─────────────────────────────────────────────────────────
   const handleUpdateStatus = async (id, currentStatus) => {
     let newStatus;
-    if (currentStatus === 'Pending')   newStatus = 'Diproses';
+    if (currentStatus === 'Pending')       newStatus = 'Diproses';
     else if (currentStatus === 'Diproses') newStatus = 'Selesai';
     else return;
 
     const { error } = await supabase.from('pesanan').update({ status: newStatus }).eq('id', id);
     if (error) { alert('Gagal update status: ' + error.message); return; }
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+  };
+
+  // ─────────────────────────────────────────────────────────
+  // CETAK STRUK (KASIR)
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * handlePrintOrder — simpan pesanan ke state printOrder,
+   * lalu setelah 1 frame (agar DOM ter-render), panggil window.print().
+   *
+   * Delay via setTimeout memastikan elemen struk sudah ada di DOM
+   * sebelum dialog cetak muncul.
+   */
+  const handlePrintOrder = (order) => {
+    setPrintOrder(order);
+    setTimeout(() => window.print(), 200);
+  };
+
+  /**
+   * handleClosePrint — bersihkan state setelah dialog cetak ditutup.
+   * Dipanggil saat user selesai mencetak atau menekan Batal.
+   */
+  const handleClosePrint = () => setPrintOrder(null);
+
+  // ─────────────────────────────────────────────────────────
+  // SIMPAN PENGATURAN PAJAK
+  // ─────────────────────────────────────────────────────────
+  /**
+   * handleSaveSettings — UPDATE baris id=1 di tabel `pengaturan`
+   * Setelah berhasil, panggil onSettingsChange() agar App.jsx
+   * melakukan refetch dan menyebarkan nilai baru ke OrderForm.
+   */
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
+    const { error } = await supabase
+      .from('pengaturan')
+      .update({
+        pajak_aktif:  localSettings.pajak_aktif,
+        pajak_persen: Number(localSettings.pajak_persen),
+      })
+      .eq('id', 1);
+    setIsSavingSettings(false);
+    if (error) { alert('Gagal simpan pengaturan: ' + error.message); return; }
+    onSettingsChange(); // minta App.jsx refetch globalSettings
+    alert('Pengaturan berhasil disimpan!');
   };
 
   // ─────────────────────────────────────────────────────────
@@ -244,17 +316,14 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange }) => {
           Mengontrol activeTab state. React re-render tabel yang sesuai.
         */}
         <div className={styles.tabNav}>
-          <button
-            className={`${styles.tabBtn} ${activeTab === 'orders' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('orders')}
-          >
+          <button className={`${styles.tabBtn} ${activeTab === 'orders'   ? styles.tabActive : ''}`} onClick={() => setActiveTab('orders')}>
             Daftar Pesanan
           </button>
-          <button
-            className={`${styles.tabBtn} ${activeTab === 'menu' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('menu')}
-          >
+          <button className={`${styles.tabBtn} ${activeTab === 'menu'     ? styles.tabActive : ''}`} onClick={() => setActiveTab('menu')}>
             Kelola Menu
+          </button>
+          <button className={`${styles.tabBtn} ${activeTab === 'settings' ? styles.tabActive : ''}`} onClick={() => setActiveTab('settings')}>
+            Pengaturan
           </button>
         </div>
 
@@ -281,6 +350,7 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange }) => {
                       <tr>
                         <th>Tanggal</th><th>Pelanggan</th>
                         <th>Kontak &amp; Alamat</th><th>Pesanan (Kopi)</th>
+                        <th>Tipe &amp; Meja</th><th>Bayar</th>
                         <th>Total</th><th>Status</th><th>Aksi</th>
                       </tr>
                     </thead>
@@ -307,6 +377,15 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange }) => {
                               }
                             </div>
                           </td>
+                          <td className={styles.tdPrice}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                              <span>{order.tipe_pesanan ?? '—'}</span>
+                              {order.nomor_meja && (
+                                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Meja {order.nomor_meja}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className={styles.tdPrice}>{order.metode_bayar ?? '—'}</td>
                           <td className={styles.tdPrice}>{formatCurrency(order.total_harga)}</td>
                           <td>
                             <span className={`${styles.statusBadge} ${
@@ -316,15 +395,26 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange }) => {
                             }`}>{order.status}</span>
                           </td>
                           <td className={styles.tdAction}>
-                            <button
-                              className={styles.actionBtn}
-                              onClick={() => handleUpdateStatus(order.id, order.status)}
-                              disabled={order.status === 'Selesai'}
-                            >
-                              {order.status === 'Selesai'  ? 'Selesai ✓' :
-                               order.status === 'Diproses' ? '→ Selesai'  :
-                               '→ Diproses'}
-                            </button>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                              {/* Ubah Status */}
+                              <button
+                                className={styles.actionBtn}
+                                onClick={() => handleUpdateStatus(order.id, order.status)}
+                                disabled={order.status === 'Selesai'}
+                              >
+                                {order.status === 'Selesai'  ? 'Selesai ✓' :
+                                 order.status === 'Diproses' ? '→ Selesai'  :
+                                 '→ Diproses'}
+                              </button>
+                              {/* Cetak Struk */}
+                              <button
+                                className={styles.actionBtn}
+                                style={{ borderColor: 'rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.7)' }}
+                                onClick={() => handlePrintOrder(order)}
+                              >
+                                🖨 Struk
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -416,6 +506,74 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange }) => {
           </div>
         )}
 
+        {/* ═══════ TAB: PENGATURAN ═══════ */}
+        {activeTab === 'settings' && (
+          <div className={styles.tableSection}>
+            <div className={styles.tableHeader}>
+              <h3 className={styles.tableTitle}>Pengaturan Pajak</h3>
+            </div>
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '400px' }}>
+
+              {/* Toggle Pajak Aktif */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p style={{ ...labelStyle, marginBottom: '0.2rem', fontSize: '0.8rem' }}>Aktifkan Pajak</p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>
+                    Pajak akan dihitung otomatis di setiap transaksi
+                  </p>
+                </div>
+                {/* Toggle switch visual */}
+                <button
+                  type="button"
+                  onClick={() => setLocalSettings(s => ({ ...s, pajak_aktif: !s.pajak_aktif }))}
+                  style={{
+                    width: '48px', height: '26px', borderRadius: '13px', border: 'none',
+                    background: localSettings.pajak_aktif ? '#fff' : 'rgba(255,255,255,0.15)',
+                    position: 'relative', cursor: 'pointer', transition: 'background 0.25s', flexShrink: 0,
+                  }}
+                  aria-label="Toggle pajak"
+                >
+                  <span style={{
+                    position: 'absolute', top: '3px',
+                    left: localSettings.pajak_aktif ? '25px' : '3px',
+                    width: '20px', height: '20px', borderRadius: '50%',
+                    background: localSettings.pajak_aktif ? '#000' : 'rgba(255,255,255,0.5)',
+                    transition: 'left 0.25s',
+                  }} />
+                </button>
+              </div>
+
+              {/* Input Persentase Pajak */}
+              <div>
+                <label style={labelStyle}>Persentase Pajak (%)</label>
+                <input
+                  type="number"
+                  min={0} max={100}
+                  value={localSettings.pajak_persen}
+                  onChange={e => setLocalSettings(s => ({ ...s, pajak_persen: e.target.value }))}
+                  disabled={!localSettings.pajak_aktif}
+                  style={{ ...inputStyle, opacity: localSettings.pajak_aktif ? 1 : 0.4, maxWidth: '120px' }}
+                />
+              </div>
+
+              {/* Preview kalkulasi */}
+              {localSettings.pajak_aktif && (
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(255,200,100,0.7)' }}>
+                  Setiap transaksi Rp 100.000 akan dikenakan pajak Rp {Math.round(100000 * (localSettings.pajak_persen / 100)).toLocaleString('id-ID')}
+                </p>
+              )}
+
+              <button
+                onClick={handleSaveSettings}
+                disabled={isSavingSettings}
+                style={{ ...btnPrimaryStyle, maxWidth: '200px', opacity: isSavingSettings ? 0.6 : 1 }}
+              >
+                {isSavingSettings ? 'Menyimpan...' : 'Simpan Pengaturan'}
+              </button>
+            </div>
+          </div>
+        )}
+
       </main>
 
       {/* Modal Form Produk */}
@@ -425,6 +583,160 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange }) => {
           onSave={handleSaveProduct}
           onClose={() => { setShowProductModal(false); setEditingProduct(null); }}
         />
+      )}
+
+      {/*
+        ── STRUK CETAK KASIR ────────────────────────────────────────
+        Komponen ini tersembunyi di layar (display:none via CSS inline).
+        Saat window.print() dipanggil, @media print di <style> tag ini
+        menyembunyikan SELURUH elemen website dan hanya menampilkan struk.
+
+        FIX 7-PAGE BUG: overflow:hidden + height:auto pada #admin-receipt-area
+        memastikan tidak ada halaman kosong yang dicetak.
+      *{/*
+        ── STRUK CETAK KASIR ────────────────────────────────────────
+      */}
+      {printOrder && (
+        <>
+          {/* Inject @media print rule ke <head> secara dinamis */}
+          <style>{`
+            /* Sembunyikan struk di layar biasa */
+            #admin-receipt-area { 
+              display: none; 
+            }
+            
+            /* Aturan saat tombol print ditekan */
+            @media print {
+              @page { margin: 0; } /* Buang margin kertas bawaan browser */
+              body * { visibility: hidden !important; }
+              
+              #admin-receipt-area {
+                display: block !important;
+                visibility: visible !important;
+                position: absolute !important;
+                top: 0 !important; left: 0 !important;
+                width: 80mm !important; /* Lebar standar printer kasir */
+                background: white !important;
+              }
+              
+              #admin-receipt-area * { 
+                visibility: visible !important; 
+                color: black !important;
+              }
+
+              /* Mencegah struk terpotong di tengah-tengah saat ganti halaman */
+              #admin-receipt-area > div {
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
+            }
+          `}</style>
+
+          {/* Struk double copy — JANGAN PAKAI style inline display none di sini! */}
+          <div id="admin-receipt-area">
+            {/* Resolve nama produk dari ID menggunakan prop products */}
+            {['— STRUK PELANGGAN —', '— SALINAN DAPUR / BARISTA —'].map((label, copyIdx) => {
+              const d = new Date();
+              const tgl = d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+              const jam = d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+              return (
+                <div key={copyIdx} style={{
+                  width: '76mm', padding: '4mm 2mm', background: '#fff', color: '#000',
+                  fontFamily: "'Courier New', Courier, monospace", fontSize: '10pt', lineHeight: 1.5,
+                  boxSizing: 'border-box',
+                }}>
+                  {/* Header */}
+                  <div style={{ textAlign: 'center', marginBottom: '2mm' }}>
+                    <div style={{ fontSize: '15pt', fontWeight: 900, letterSpacing: '0.2em', fontFamily: 'Georgia, serif' }}>BIMA COFFEE</div>
+                    <div style={{ fontSize: '8pt', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Specialty Coffee Roaster</div>
+                    <div style={{ fontSize: '8pt', color: '#444' }}>Lumajang, East Java</div>
+                  </div>
+
+                  <div style={{ borderTop: '1px dashed #000', margin: '3mm 0' }} />
+
+                  {/* Info transaksi */}
+                  <div style={{ fontSize: '8pt', color: '#333', marginBottom: '1mm' }}>{tgl}   {jam}</div>
+                  <div style={{ display:'flex', justifyContent:'space-between' }}><span>Kasir</span><span>Admin</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between' }}>
+                    <span>Tipe</span>
+                    <span>{printOrder.tipe_pesanan === 'DINE_IN' ? `Dine In — Meja ${printOrder.nomor_meja}` : 'Takeaway'}</span>
+                  </div>
+
+                  <div style={{ borderTop: '1px dashed #000', margin: '3mm 0' }} />
+
+                  {/* Pelanggan */}
+                  <div style={{ display:'flex', justifyContent:'space-between' }}><span>Pelanggan</span><span>{printOrder.nama || '—'}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between' }}><span>WA</span><span>{printOrder.nomor_wa || '—'}</span></div>
+
+                  <div style={{ borderTop: '1px dashed #000', margin: '3mm 0' }} />
+
+                  {/* Item pesanan */}
+                  <div style={{ fontWeight:'bold', fontSize:'8pt', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:'1mm' }}>PESANAN</div>
+                  {Array.isArray(printOrder.detail_pesanan) && printOrder.detail_pesanan.map((item, i) => {
+                    const prod  = products.find(p => p.id === item.productId);
+                    const qty   = Number(item.quantity);
+                    const harga = prod?.price ?? 0;
+                    return (
+                      <div key={i} style={{ marginBottom: '2mm' }}>
+                        <div style={{ fontWeight:'bold' }}>{prod?.name ?? item.productId}</div>
+                        <div style={{ display:'flex', justifyContent:'space-between' }}>
+                          <span> {qty} x Rp {harga.toLocaleString('id-ID')}</span>
+                          <span>Rp {(harga * qty).toLocaleString('id-ID')}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ borderTop: '1px dashed #000', margin: '3mm 0' }} />
+
+                  {/* Harga */}
+                  <div style={{ display:'flex', justifyContent:'space-between' }}>
+                    <span>Subtotal</span>
+                    <span>Rp {(printOrder.subtotal ?? printOrder.total_harga ?? 0).toLocaleString('id-ID')}</span>
+                  </div>
+                  {printOrder.pajak_ppn > 0 && (
+                    <div style={{ display:'flex', justifyContent:'space-between' }}>
+                      <span>PPN {globalSettings.pajak_persen ?? 11}%</span>
+                      <span>Rp {printOrder.pajak_ppn.toLocaleString('id-ID')}</span>
+                    </div>
+                  )}
+                  <div style={{ borderTop: '2px solid #000', margin: '3mm 0' }} />
+                  <div style={{ display:'flex', justifyContent:'space-between', fontWeight:'bold' }}>
+                    <span>TOTAL</span>
+                    <span>Rp {(printOrder.total_harga ?? 0).toLocaleString('id-ID')}</span>
+                  </div>
+                  <div style={{ borderTop: '1px dashed #000', margin: '3mm 0' }} />
+
+                  {/* Pembayaran */}
+                  <div style={{ display:'flex', justifyContent:'space-between' }}>
+                    <span>Metode Bayar</span><span>{printOrder.metode_bayar || '—'}</span>
+                  </div>
+
+                  <div style={{ borderTop: '1px dashed #000', margin: '3mm 0' }} />
+
+                  {/* Footer */}
+                  <div style={{ textAlign:'center', marginTop:'2mm' }}>
+                    <div style={{ fontStyle:'italic', fontSize:'9pt' }}>Terima kasih telah</div>
+                    <div style={{ fontStyle:'italic', fontSize:'9pt' }}>mampir ke Bima Coffee ☕</div>
+                    <div style={{ fontSize:'7pt', color:'#666', marginTop:'2mm', fontStyle:'italic' }}>Struk ini berlaku sebagai bukti pembayaran</div>
+                  </div>
+
+                  {/* Label salinan */}
+                  <div style={{ textAlign:'center', fontSize:'7.5pt', letterSpacing:'0.1em', color:'#555', marginTop:'3mm', paddingTop:'2mm', borderTop:'1px dotted #999' }}>
+                    {label}
+                  </div>
+
+                  {/* Garis potong antar salinan (hanya setelah copy pertama) */}
+                  {copyIdx === 0 && (
+                    <div style={{ textAlign:'center', fontSize:'7pt', color:'#888', padding:'4mm 0', letterSpacing:'0.04em' }}>
+                      ✂ ───────── POTONG DI SINI ───────── ✂
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </section>
   );
