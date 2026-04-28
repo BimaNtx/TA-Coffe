@@ -9,7 +9,12 @@
  *   5. CRUD        — Create, Read, Update, Delete pada tabel `produk`
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  LineChart, Line,
+  BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts';
 import { supabase } from '../supabaseClient';
 import styles from './AdminDashboard.module.css';
 
@@ -90,7 +95,7 @@ const btnSecondaryStyle = { flex: 1, background: 'transparent', color: 'rgba(255
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA
 // ─────────────────────────────────────────────────────────────
-const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSettings = {}, onSettingsChange }) => {
+const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSettings = {}, onSettingsChange, userRole }) => {
 
   // ── State Pesanan ─────────────────────────────────────────
   const [orders,   setOrders]   = useState([]);
@@ -280,6 +285,51 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
   const currentOrders = orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // ─────────────────────────────────────────────────────────
+  // DATA PROCESSING UNTUK GRAFIK (useMemo = hanya re-kalkulasi saat orders berubah)
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * revenueData — Total pendapatan per tanggal (DD/MM) untuk LineChart.
+   * Iterasi orders, group by tanggal, jumlahkan total_harga.
+   */
+  const revenueData = useMemo(() => {
+    const map = {};
+    // Urutkan orders ascending agar grafik kiri→kanan = lama→baru
+    const sorted = [...orders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    sorted.forEach(o => {
+      if (!o.created_at) return;
+      const d   = new Date(o.created_at);
+      const key = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      map[key] = (map[key] ?? 0) + (o.total_harga ?? 0);
+    });
+    return Object.entries(map).map(([tanggal, pendapatan]) => ({ tanggal, pendapatan }));
+  }, [orders]);
+
+  /**
+   * topProductsData — 5 produk terlaris berdasarkan total qty dari detail_pesanan.
+   * Resolve nama produk menggunakan prop products.
+   */
+  const topProductsData = useMemo(() => {
+    const qtyMap = {};
+    orders.forEach(o => {
+      if (!Array.isArray(o.detail_pesanan)) return;
+      o.detail_pesanan.forEach(item => {
+        if (!item.productId) return;
+        qtyMap[item.productId] = (qtyMap[item.productId] ?? 0) + Number(item.quantity ?? 1);
+      });
+    });
+    return Object.entries(qtyMap)
+      .sort((a, b) => b[1] - a[1])   // sort descending
+      .slice(0, 5)                    // ambil 5 teratas
+      .map(([productId, terjual]) => {
+        const prod = products.find(p => p.id === productId);
+        const nama = prod?.name ?? productId.replace(/-/g, ' ');
+        // Potong nama panjang agar tidak overflow label sumbu X
+        return { nama: nama.length > 14 ? nama.slice(0, 13) + '…' : nama, terjual };
+      });
+  }, [orders, products]);
+
+  // ─────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────
   return (
@@ -289,7 +339,7 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
       <header className={styles.header}>
         <div className={styles.headerTitles}>
           <h1 className={styles.brand}>Bima Coffee</h1>
-          <h2 className={styles.consoleTitle}>Admin Console</h2>
+          <h2 className={styles.consoleTitle}>Admin Console (Role: {userRole || 'KOSONG'})</h2>
         </div>
         <button className={styles.logoutBtn} onClick={() => navigateTo('landing')}>
           LOGOUT <span aria-hidden="true">→</span>
@@ -319,12 +369,25 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
           <button className={`${styles.tabBtn} ${activeTab === 'orders'   ? styles.tabActive : ''}`} onClick={() => setActiveTab('orders')}>
             Daftar Pesanan
           </button>
-          <button className={`${styles.tabBtn} ${activeTab === 'menu'     ? styles.tabActive : ''}`} onClick={() => setActiveTab('menu')}>
-            Kelola Menu
-          </button>
-          <button className={`${styles.tabBtn} ${activeTab === 'settings' ? styles.tabActive : ''}`} onClick={() => setActiveTab('settings')}>
-            Pengaturan
-          </button>
+          {/*
+            Tab "Kelola Menu" dan "Pengaturan" hanya ditampilkan kepada owner.
+            Kasir dan Barista secara default hanya melihat tab Daftar Pesanan.
+          */}
+          {userRole === 'owner' && (
+            <button className={`${styles.tabBtn} ${activeTab === 'menu'     ? styles.tabActive : ''}`} onClick={() => setActiveTab('menu')}>
+              Kelola Menu
+            </button>
+          )}
+          {userRole === 'owner' && (
+            <button className={`${styles.tabBtn} ${activeTab === 'settings' ? styles.tabActive : ''}`} onClick={() => setActiveTab('settings')}>
+              Pengaturan
+            </button>
+          )}
+          {userRole === 'owner' && (
+            <button className={`${styles.tabBtn} ${activeTab === 'laporan' ? styles.tabActive : ''}`} onClick={() => setActiveTab('laporan')}>
+              Laporan
+            </button>
+          )}
         </div>
 
         {/* ═══════ TAB: DAFTAR PESANAN ═══════ */}
@@ -571,6 +634,140 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
                 {isSavingSettings ? 'Menyimpan...' : 'Simpan Pengaturan'}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* ═══════ TAB: LAPORAN ANALITIK ═══════ */}
+        {activeTab === 'laporan' && (
+          <div className={styles.tableSection}>
+            <div className={styles.tableHeader}>
+              <h3 className={styles.tableTitle}>Laporan Analitik</h3>
+              <span className={styles.tableCount}>{orders.length} Data Pesanan</span>
+            </div>
+
+            {orders.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p className={styles.emptyText}>Belum ada data pesanan untuk ditampilkan.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', padding: '1.5rem 0' }}>
+
+                {/* ── Grafik 1: Tren Pendapatan ──────────────────── */}
+                <div>
+                  <p style={{
+                    fontFamily: 'Inter, sans-serif', fontSize: '0.65rem',
+                    letterSpacing: '0.14em', color: 'rgba(255,255,255,0.35)',
+                    textTransform: 'uppercase', marginBottom: '1rem',
+                  }}>
+                    Tren Pendapatan Harian
+                  </p>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <LineChart data={revenueData} margin={{ top: 5, right: 24, left: 10, bottom: 5 }}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="rgba(255,255,255,0.06)"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="tanggal"
+                        tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'Inter, sans-serif' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10, fontFamily: 'Inter, sans-serif' }}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={v => {
+                          if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}jt`;
+                          if (v >= 1_000)    return `${(v / 1_000).toFixed(0)}rb`;
+                          return v;
+                        }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: '#0d0d0d',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '6px',
+                          fontFamily: 'Inter, sans-serif',
+                          fontSize: '12px',
+                          color: '#fff',
+                        }}
+                        formatter={v => [new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v), 'Pendapatan']}
+                        labelStyle={{ color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}
+                        cursor={{ stroke: 'rgba(255,255,255,0.08)' }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="pendapatan"
+                        stroke="#d4a96a"
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: '#d4a96a', strokeWidth: 0 }}
+                        activeDot={{ r: 5, fill: '#fff', stroke: '#d4a96a', strokeWidth: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* ── Grafik 2: Menu Terlaris ────────────────────── */}
+                <div>
+                  <p style={{
+                    fontFamily: 'Inter, sans-serif', fontSize: '0.65rem',
+                    letterSpacing: '0.14em', color: 'rgba(255,255,255,0.35)',
+                    textTransform: 'uppercase', marginBottom: '1rem',
+                  }}>
+                    5 Menu Terlaris
+                  </p>
+                  {topProductsData.length === 0 ? (
+                    <p style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem' }}>
+                      Tidak ada data detail pesanan.
+                    </p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={topProductsData} margin={{ top: 5, right: 24, left: 10, bottom: 5 }}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="rgba(255,255,255,0.06)"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="nama"
+                          tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'Inter, sans-serif' }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          allowDecimals={false}
+                          tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10, fontFamily: 'Inter, sans-serif' }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            background: '#0d0d0d',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '6px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '12px',
+                            color: '#fff',
+                          }}
+                          formatter={v => [v, 'Terjual']}
+                          labelStyle={{ color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}
+                          cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                        />
+                        <Bar
+                          dataKey="terjual"
+                          fill="#d4a96a"
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={56}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+
+              </div>
+            )}
           </div>
         )}
 
