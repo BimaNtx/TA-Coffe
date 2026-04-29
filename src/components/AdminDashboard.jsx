@@ -46,7 +46,19 @@ const ProductFormModal = ({ initial, onSave, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !price) { setError('Nama dan harga wajib diisi.'); return; }
+
+    // Validasi 1: Nama minimal 3 karakter (bukan hanya spasi)
+    if (name.trim().length < 3) {
+      setError('Nama produk minimal 3 karakter.');
+      return;
+    }
+
+    // Validasi 2: Harga harus angka positif
+    if (!price || Number(price) <= 0) {
+      setError('Harga harus lebih dari Rp 0.');
+      return;
+    }
+
     setIsSaving(true);
     await onSave({ name: name.trim(), price: Number(price) });
     setIsSaving(false);
@@ -72,7 +84,7 @@ const ProductFormModal = ({ initial, onSave, onClose }) => {
           </div>
           <div>
             <label style={labelStyle}>Harga (Rp)</label>
-            <input type="number" value={price} onChange={e => setPrice(e.target.value)} style={inputStyle} placeholder="Contoh: 85000" />
+            <input type="number" step="1000" value={price} onChange={e => setPrice(e.target.value)} style={inputStyle} placeholder="Contoh: 85000" />
           </div>
           {error && <p style={{ color: '#ff6b6b', fontSize: '0.75rem' }}>⚠ {error}</p>}
           <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
@@ -413,8 +425,11 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
                       <tr>
                         <th>Tanggal</th><th>Pelanggan</th>
                         <th>Kontak &amp; Alamat</th><th>Pesanan (Kopi)</th>
-                        <th>Tipe &amp; Meja</th><th>Bayar</th>
-                        <th>Total</th><th>Status</th><th>Aksi</th>
+                        <th>Tipe &amp; Meja</th>
+                        {/* Kolom finansial: disembunyikan untuk Barista */}
+                        {userRole !== 'barista' && <th>Bayar</th>}
+                        {userRole !== 'barista' && <th>Total</th>}
+                        <th>Status</th><th>Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -448,8 +463,14 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
                               )}
                             </div>
                           </td>
-                          <td className={styles.tdPrice}>{order.metode_bayar ?? '—'}</td>
-                          <td className={styles.tdPrice}>{formatCurrency(order.total_harga)}</td>
+                          {/* Metode Bayar: disembunyikan untuk Barista */}
+                          {userRole !== 'barista' && (
+                            <td className={styles.tdPrice}>{order.metode_bayar ?? '—'}</td>
+                          )}
+                          {/* Total Harga: disembunyikan untuk Barista */}
+                          {userRole !== 'barista' && (
+                            <td className={styles.tdPrice}>{formatCurrency(order.total_harga)}</td>
+                          )}
                           <td>
                             <span className={`${styles.statusBadge} ${
                               order.status === 'Pending'  ? styles.badgePending    :
@@ -469,14 +490,16 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
                                  order.status === 'Diproses' ? '→ Selesai'  :
                                  '→ Diproses'}
                               </button>
-                              {/* Cetak Struk */}
-                              <button
-                                className={styles.actionBtn}
-                                style={{ borderColor: 'rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.7)' }}
-                                onClick={() => handlePrintOrder(order)}
-                              >
-                                🖨 Struk
-                              </button>
+                              {/* Cetak Struk: hanya untuk Owner & Kasir, bukan Barista */}
+                              {userRole !== 'barista' && (
+                                <button
+                                  className={styles.actionBtn}
+                                  style={{ borderColor: 'rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.7)' }}
+                                  onClick={() => handlePrintOrder(order)}
+                                >
+                                  🖨 Struk
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
