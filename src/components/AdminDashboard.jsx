@@ -17,6 +17,10 @@ import {
 } from 'recharts';
 import { supabase } from '../supabaseClient';
 import styles from './AdminDashboard.module.css';
+import ConfirmationModal from './ConfirmationModal';
+import SuccessModal from './SuccessModal';
+import OrderList from './OrderList';
+import ProductManager from './ProductManager';
 
 // ─────────────────────────────────────────────────────────────
 // HELPER FUNCTIONS
@@ -35,144 +39,9 @@ const formatCurrency = (amount) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })
     .format(amount ?? 0);
 
-// ─────────────────────────────────────────────────────────────
-// MODAL FORM: Tambah / Edit Produk
-// ─────────────────────────────────────────────────────────────
-const ProductFormModal = ({ initial, onSave, onClose }) => {
-  const [name,      setName]      = useState(initial?.name  ?? '');
-  const [price,     setPrice]     = useState(initial?.price ?? '');
-  const [isSaving,  setIsSaving]  = useState(false);
-  const [error,     setError]     = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Validasi 1: Nama minimal 3 karakter (bukan hanya spasi)
-    if (name.trim().length < 3) {
-      setError('Nama produk minimal 3 karakter.');
-      return;
-    }
-
-    // Validasi 2: Harga harus angka positif
-    if (!price || Number(price) <= 0) {
-      setError('Harga harus lebih dari Rp 0.');
-      return;
-    }
-
-    setIsSaving(true);
-    await onSave({ name: name.trim(), price: Number(price) });
-    setIsSaving(false);
-  };
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
-      background: 'rgba(0,0,0,0.85)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <div style={{
-        background: '#0a0808', border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '8px', padding: '2rem', width: '100%', maxWidth: '380px',
-      }}>
-        <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', color: '#fff', marginBottom: '1.5rem' }}>
-          {initial ? 'Edit Produk' : 'Tambah Produk'}
-        </h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={labelStyle}>Nama Produk</label>
-            <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} placeholder="Contoh: Semeru Espresso" />
-          </div>
-          <div>
-            <label style={labelStyle}>Harga (Rp)</label>
-            <input type="number" step="1000" value={price} onChange={e => setPrice(e.target.value)} style={inputStyle} placeholder="Contoh: 85000" />
-          </div>
-          {error && <p style={{ color: '#ff6b6b', fontSize: '0.75rem' }}>⚠ {error}</p>}
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-            <button type="submit" disabled={isSaving} style={btnPrimaryStyle}>
-              {isSaving ? 'Menyimpan...' : 'Simpan'}
-            </button>
-            <button type="button" onClick={onClose} style={btnSecondaryStyle}>Batal</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-const labelStyle       = { display: 'block', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.4)', marginBottom: '0.4rem' };
-const inputStyle       = { width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.6rem 0.8rem', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', boxSizing: 'border-box' };
-const btnPrimaryStyle  = { flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
-const btnSecondaryStyle = { flex: 1, background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
-
-// ─────────────────────────────────────────────────────────────
-// MODAL: KONFIRMASI HAPUS
-// Props: isOpen, title, message, onConfirm, onClose
-// ─────────────────────────────────────────────────────────────
-const ConfirmationModal = ({ isOpen, title, message, onConfirm, onClose }) => {
-  if (!isOpen) return null;
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 2000,
-      background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      animation: 'fadeIn 0.2s ease',
-    }}>
-      <div style={{
-        background: '#0a0808', border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '10px', padding: '2rem', width: '100%', maxWidth: '360px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.6)', textAlign: 'center',
-      }}>
-        <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>⚠️</div>
-        <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.4rem', color: '#fff', marginBottom: '0.6rem' }}>
-          {title}
-        </h3>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '1.75rem' }}>
-          {message}
-        </p>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={onClose} style={btnSecondaryStyle}>Batal</button>
-          <button
-            onClick={onConfirm}
-            style={{ ...btnPrimaryStyle, background: '#c0392b', color: '#fff', border: 'none' }}
-          >
-            Ya, Hapus
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────────────────────
-// MODAL: NOTIFIKASI SUKSES
-// Props: isOpen, title, message, onClose
-// ─────────────────────────────────────────────────────────────
-const SuccessModal = ({ isOpen, title, message, onClose }) => {
-  if (!isOpen) return null;
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 2000,
-      background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      animation: 'fadeIn 0.2s ease',
-    }}>
-      <div style={{
-        background: '#0a0808', border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '10px', padding: '2rem', width: '100%', maxWidth: '360px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.6)', textAlign: 'center',
-      }}>
-        <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>✅</div>
-        <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.4rem', color: '#fff', marginBottom: '0.6rem' }}>
-          {title}
-        </h3>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '1.75rem' }}>
-          {message}
-        </p>
-        <button onClick={onClose} style={{ ...btnPrimaryStyle, flex: 'none', width: '100%' }}>OK</button>
-      </div>
-    </div>
-  );
-};
+// ProductFormModal, style constants, ConfirmationModal, SuccessModal
+// untuk fitur produk & pengaturan telah dipindahkan ke ProductManager.jsx
+// → src/components/ProductManager.jsx
 
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA
@@ -182,8 +51,6 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
   // ── State Pesanan ─────────────────────────────────────────
   const [orders,   setOrders]   = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   /**
    * printOrder — pesanan yang sedang dicetak.
@@ -201,57 +68,19 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
    */
   const [activeTab, setActiveTab] = useState('orders');
 
-  // ── State Live Search & Filter Tabel Pesanan ──────────────────
-  /**
-   * searchQuery — kata kunci pencarian dari input text.
-   * Dicocokkan ke nama pelanggan dan nomor WA (case-insensitive).
-   */
-  const [searchQuery,  setSearchQuery]  = useState('');
+  // searchQuery, statusFilter, currentPage — telah dipindahkan ke OrderList.jsx
 
+  // ── State Modal Pesanan ───────────────────────────────────
   /**
-   * statusFilter — filter status pesanan dari dropdown.
-   * 'Semua' = tampilkan semua, nilai lain = filter ketat.
-   */
-  const [statusFilter, setStatusFilter] = useState('Semua');
-
-  // ── State Modal Produk ────────────────────────────────
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [editingProduct,   setEditingProduct]   = useState(null);
-
-  // ── State Custom Modals ───────────────────────────────
-  /**
-   * modalDelete — mengontrol ConfirmationModal untuk hapus produk.
-   * { open: bool, id: string, name: string }
-   */
-  const [modalDelete, setModalDelete] = useState({ open: false, id: null, name: '' });
-
-  /**
-   * successModal — mengontrol SuccessModal setelah operasi DB berhasil.
+   * successModal — mengontrol SuccessModal untuk error operasi pesanan.
    * { open: bool, title: string, message: string }
    */
   const [successModal, setSuccessModal] = useState({ open: false, title: '', message: '' });
 
-  /** Helper: tampilkan SuccessModal dengan pesan tertentu */
+  /** Helper: tampilkan SuccessModal untuk error pesanan */
   const showSuccess = (title, message) => setSuccessModal({ open: true, title, message });
 
-  // ── State Pengaturan Lokal ─────────────────────────────────
-  /**
-   * localSettings — salinan sementara globalSettings untuk form edit.
-   * Perubahan di sini belum disimpan ke DB sampai admin klik "Simpan".
-   */
-  const [localSettings, setLocalSettings] = useState({
-    pajak_aktif:  globalSettings.pajak_aktif  ?? false,
-    pajak_persen: globalSettings.pajak_persen ?? 11,
-  });
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
-
-  // Sinkronkan localSettings saat globalSettings dari App berubah
-  useEffect(() => {
-    setLocalSettings({
-      pajak_aktif:  globalSettings.pajak_aktif  ?? false,
-      pajak_persen: globalSettings.pajak_persen ?? 11,
-    });
-  }, [globalSettings.pajak_aktif, globalSettings.pajak_persen]);
+  // State & logika produk/pengaturan → telah dipindahkan ke ProductManager.jsx
 
   // ─────────────────────────────────────────────────────────
   // FETCH PESANAN
@@ -308,98 +137,10 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
   const handleClosePrint = () => setPrintOrder(null);
 
   // ─────────────────────────────────────────────────────────
-  // SIMPAN PENGATURAN PAJAK
+  // handleSaveSettings, handleSaveProduct, handleToggleAvailable,
+  // handleDeleteProduct, confirmDeleteProduct
+  // → telah dipindahkan ke ProductManager.jsx
   // ─────────────────────────────────────────────────────────
-  /**
-   * handleSaveSettings — UPDATE baris id=1 di tabel `pengaturan`
-   * Setelah berhasil, panggil onSettingsChange() agar App.jsx
-   * melakukan refetch dan menyebarkan nilai baru ke OrderForm.
-   */
-  const handleSaveSettings = async () => {
-    setIsSavingSettings(true);
-    const { error } = await supabase
-      .from('pengaturan')
-      .update({
-        pajak_aktif:  localSettings.pajak_aktif,
-        pajak_persen: Number(localSettings.pajak_persen),
-      })
-      .eq('id', 1);
-    setIsSavingSettings(false);
-    if (error) {
-      showSuccess('Gagal Menyimpan', 'Terjadi kesalahan: ' + error.message);
-      return;
-    }
-    onSettingsChange();
-    showSuccess('Pengaturan Disimpan', 'Pengaturan pajak berhasil disimpan ke database.');
-  };
-
-  // ─────────────────────────────────────────────────────────
-  // CRUD PRODUK
-  // ─────────────────────────────────────────────────────────
-
-  /**
-   * handleSaveProduct — INSERT jika tambah baru, UPDATE jika edit
-   * Setelah berhasil, panggil onProductsChange() agar App.jsx
-   * melakukan refetch sehingga ProductCatalog & OrderForm ikut update.
-   */
-  const handleSaveProduct = async ({ name, price }) => {
-    if (editingProduct) {
-      const { error } = await supabase
-        .from('produk').update({ name, price }).eq('id', editingProduct.id);
-      if (error) {
-        showSuccess('Gagal Update', 'Terjadi kesalahan: ' + error.message);
-        return;
-      }
-    } else {
-      // Generate id dari nama produk: spasi → strip, huruf kecil
-      // Contoh: "Semeru Espresso" → "semeru-espresso"
-      const generatedId = name.toLowerCase().trim().replace(/\s+/g, '-');
-      const { error } = await supabase
-        .from('produk').insert({ id: generatedId, name, price, is_available: true });
-      if (error) {
-        showSuccess('Gagal Tambah', 'Terjadi kesalahan: ' + error.message);
-        return;
-      }
-    }
-    setShowProductModal(false);
-    setEditingProduct(null);
-    onProductsChange();
-    showSuccess(
-      editingProduct ? 'Produk Diperbarui' : 'Produk Ditambahkan',
-      `"${name}" berhasil ${editingProduct ? 'diperbarui' : 'ditambahkan'} ke daftar menu.`
-    );
-  };
-
-  const handleToggleAvailable = async (product) => {
-    const newVal = !product.is_available;
-    const { error } = await supabase
-      .from('produk').update({ is_available: newVal }).eq('id', product.id);
-    if (error) {
-      showSuccess('Gagal Ubah Stok', 'Terjadi kesalahan: ' + error.message);
-      return;
-    }
-    onProductsChange();
-  };
-
-  /**
-   * handleDeleteProduct — buka ConfirmationModal dulu.
-   * Eksekusi delete ke Supabase HANYA jika user konfirmasi di modal.
-   */
-  const handleDeleteProduct = (id, name) => {
-    setModalDelete({ open: true, id, name });
-  };
-
-  const confirmDeleteProduct = async () => {
-    const { id, name } = modalDelete;
-    setModalDelete({ open: false, id: null, name: '' });
-    const { error } = await supabase.from('produk').delete().eq('id', id);
-    if (error) {
-      showSuccess('Gagal Hapus', 'Terjadi kesalahan: ' + error.message);
-      return;
-    }
-    onProductsChange();
-    showSuccess('Produk Dihapus', `"${name}" berhasil dihapus dari daftar menu.`);
-  };
 
   // ─────────────────────────────────────────────────────────
   // KALKULASI STATISTIK + PAGINASI
@@ -412,33 +153,7 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
     { title: 'Total Semua Pesanan', value: orders.length,                  suffix: 'Pesanan'  },
   ];
 
-  // ─────────────────────────────────────────────────────────
-  // FILTER DERIVATIF — dijalankan setiap render, tanpa useMemo
-  // karena filternya cepat dan orders biasanya < 1000 baris.
-  // ─────────────────────────────────────────────────────────
-  const filteredOrders = orders.filter(order => {
-    // 1. Filter status — lewati jika pilih "Semua"
-    if (statusFilter !== 'Semua' && order.status !== statusFilter) return false;
-
-    // 2. Filter pencarian — lewati jika query kosong
-    if (searchQuery.trim()) {
-      const q    = searchQuery.toLowerCase();
-      const nama = order.nama?.toLowerCase() ?? '';
-      const wa   = order.nomor_wa?.toLowerCase() ?? '';
-      if (!nama.includes(q) && !wa.includes(q)) return false;
-    }
-
-    return true;
-  });
-
-  // Reset ke halaman 1 setiap kali filter berubah
-  // agar user tidak tersangkut di halaman yang sekarang kosong.
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
-
-  const totalPages    = Math.ceil(filteredOrders.length / itemsPerPage);
-  const currentOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // filteredOrders, totalPages, currentOrders — telah dipindahkan ke OrderList.jsx
 
   // ─────────────────────────────────────────────────────────
   // DATA PROCESSING UNTUK GRAFIK (useMemo = hanya re-kalkulasi saat orders berubah)
@@ -548,339 +263,26 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
 
         {/* ═══════ TAB: DAFTAR PESANAN ═══════ */}
         {activeTab === 'orders' && (
-          <div className={styles.tableSection}>
-            <div className={styles.tableHeader}>
-              <h3 className={styles.tableTitle}>Pesanan Masuk</h3>
-              <div className={styles.tableActions}>
-                <span className={styles.tableCount}>
-                  {filteredOrders.length !== orders.length
-                    ? `${filteredOrders.length} dari ${orders.length}`
-                    : `${orders.length} Total`}
-                </span>
-                <button className={styles.refreshBtn} onClick={fetchOrders}>↻ Refresh</button>
-              </div>
-            </div>
-
-            {/* ── Bar Pencarian & Filter ─────────────────────────────── */}
-            <div style={{
-              display: 'flex', gap: '0.6rem', flexWrap: 'wrap',
-              marginBottom: '1rem', alignItems: 'center',
-            }}>
-              {/* Input Pencarian */}
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="🔍  Cari nama pelanggan atau nomor WA..."
-                style={{
-                  flex: '1 1 220px', minWidth: '180px',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: '6px', padding: '0.55rem 0.9rem',
-                  color: '#fff', fontFamily: 'Inter, sans-serif',
-                  fontSize: '0.78rem', outline: 'none',
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={e  => e.target.style.borderColor = 'rgba(255,255,255,0.35)'}
-                onBlur={e   => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
-              />
-
-              {/* Dropdown Filter Status */}
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: '6px', padding: '0.55rem 0.75rem',
-                  color: '#fff', fontFamily: 'Inter, sans-serif',
-                  fontSize: '0.78rem', cursor: 'pointer', outline: 'none',
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={e => e.target.style.borderColor = 'rgba(255,255,255,0.35)'}
-                onBlur={e  => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
-              >
-                <option value="Semua">Semua Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Diproses">Diproses</option>
-                <option value="Selesai">Selesai</option>
-              </select>
-              
-              {/* Tombol Reset — hanya tampil jika ada filter aktif */}
-              {(searchQuery || statusFilter !== 'Semua') && (
-                <button
-                  onClick={() => { setSearchQuery(''); setStatusFilter('Semua'); }}
-                  style={{
-                    background: 'none',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '6px', padding: '0.55rem 0.75rem',
-                    color: 'rgba(255,255,255,0.45)',
-                    fontFamily: 'Inter, sans-serif', fontSize: '0.75rem',
-                    cursor: 'pointer', whiteSpace: 'nowrap',
-                    transition: 'color 0.2s, border-color 0.2s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
-                >
-                  ✕ Reset
-                </button>
-              )}
-            </div>
-
-            {isLoading ? (
-              <div className={styles.loadingState}><p className={styles.loadingText}>Memuat data pesanan...</p></div>
-            ) : orders.length === 0 ? (
-              /* Belum ada pesanan sama sekali */
-              <div className={styles.emptyState}><p className={styles.emptyText}>Belum ada pesanan masuk.</p></div>
-            ) : filteredOrders.length === 0 ? (
-              /* Ada pesanan, tapi tidak ada yang cocok dengan filter */
-              <div className={styles.emptyState}>
-                <p className={styles.emptyText}>
-                  Tidak ada pesanan yang cocok dengan pencarian
-                  {statusFilter !== 'Semua' ? ` & filter "${statusFilter}"` : ''}.
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className={styles.tableContainer}>
-                  <table className={styles.ordersTable}>
-                    <thead>
-                      <tr>
-                        <th>Tanggal</th><th>Pelanggan</th>
-                        <th>Kontak &amp; Alamat</th><th>Pesanan (Kopi)</th>
-                        <th>Tipe &amp; Meja</th>
-                        {/* Kolom finansial: disembunyikan untuk Barista */}
-                        {userRole !== 'barista' && <th>Bayar</th>}
-                        {userRole !== 'barista' && <th>Total</th>}
-                        <th>Status</th><th>Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentOrders.map(order => (
-                        <tr key={order.id}>
-                          <td className={styles.tdDate}>{formatDate(order.created_at)}</td>
-                          <td className={styles.tdName}>{order.nama ?? '—'}</td>
-                          <td className={styles.tdContact}>
-                            <div className={styles.tdContactInner}>
-                              <span className={styles.contactWa}>{order.nomor_wa}</span>
-                              <span className={styles.contactAddress}>{order.alamat}</span>
-                            </div>
-                          </td>
-                          <td className={styles.tdItems}>
-                            <div className={styles.tdItemsInner}>
-                              {Array.isArray(order.detail_pesanan)
-                                ? order.detail_pesanan.map((item, i) => (
-                                    <span key={i} className={styles.itemChip}>
-                                      {item.quantity}× {item.productId?.replace(/-/g, ' ')}
-                                    </span>
-                                  ))
-                                : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>
-                              }
-                            </div>
-                          </td>
-                          <td className={styles.tdPrice}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                              <span>{order.tipe_pesanan ?? '—'}</span>
-                              {order.nomor_meja && (
-                                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Meja {order.nomor_meja}</span>
-                              )}
-                            </div>
-                          </td>
-                          {/* Metode Bayar: disembunyikan untuk Barista */}
-                          {userRole !== 'barista' && (
-                            <td className={styles.tdPrice}>{order.metode_bayar ?? '—'}</td>
-                          )}
-                          {/* Total Harga: disembunyikan untuk Barista */}
-                          {userRole !== 'barista' && (
-                            <td className={styles.tdPrice}>{formatCurrency(order.total_harga)}</td>
-                          )}
-                          <td>
-                            <span className={`${styles.statusBadge} ${
-                              order.status === 'Pending'  ? styles.badgePending    :
-                              order.status === 'Diproses' ? styles.badgeProcessing :
-                              styles.badgeDone
-                            }`}>{order.status}</span>
-                          </td>
-                          <td className={styles.tdAction}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                              {/* Ubah Status */}
-                              <button
-                                className={styles.actionBtn}
-                                onClick={() => handleUpdateStatus(order.id, order.status)}
-                                disabled={order.status === 'Selesai'}
-                              >
-                                {order.status === 'Selesai'  ? 'Selesai ✓' :
-                                 order.status === 'Diproses' ? '→ Selesai'  :
-                                 '→ Diproses'}
-                              </button>
-                              {/* Cetak Struk: hanya untuk Owner & Kasir, bukan Barista */}
-                              {userRole !== 'barista' && (
-                                <button
-                                  className={styles.actionBtn}
-                                  style={{ borderColor: 'rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.7)' }}
-                                  onClick={() => handlePrintOrder(order)}
-                                >
-                                  🖨 Struk
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {totalPages > 1 && (
-                  <div className={styles.pagination}>
-                    <button className={styles.pageBtn} onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>← Prev</button>
-                    <span className={styles.pageInfo}>Halaman <strong>{currentPage}</strong> dari <strong>{totalPages}</strong></span>
-                    <button className={styles.pageBtn} onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Next →</button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <OrderList
+            orders={orders}
+            isLoading={isLoading}
+            onRefresh={fetchOrders}
+            onUpdateStatus={handleUpdateStatus}
+            onPrintOrder={handlePrintOrder}
+            userRole={userRole}
+          />
         )}
 
-        {/* ═══════ TAB: KELOLA MENU ═══════ */}
-        {activeTab === 'menu' && (
-          <div className={styles.tableSection}>
-            <div className={styles.tableHeader}>
-              <h3 className={styles.tableTitle}>Kelola Menu Kopi</h3>
-              <button
-                className={styles.refreshBtn}
-                style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', padding: '0.5rem 1rem' }}
-                onClick={() => { setEditingProduct(null); setShowProductModal(true); }}
-              >
-                + Tambah Produk
-              </button>
-            </div>
-
-            {products.length === 0 ? (
-              <div className={styles.emptyState}><p className={styles.emptyText}>Belum ada produk. Klik "Tambah Produk".</p></div>
-            ) : (
-              <div className={styles.tableContainer}>
-                <table className={styles.ordersTable}>
-                  <thead>
-                    <tr>
-                      <th>Nama Produk</th>
-                      <th>Harga</th>
-                      <th>Stok / Status</th>
-                      <th style={{ textAlign: 'right' }}>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products.map(p => (
-                      <tr key={p.id}>
-                        <td className={styles.tdName}>{p.name}</td>
-                        <td className={styles.tdPrice}>{formatCurrency(p.price)}</td>
-                        <td>
-                          {/* Toggle Stok: klik badge untuk toggle is_available */}
-                          <button
-                            onClick={() => handleToggleAvailable(p)}
-                            style={{
-                              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                            }}
-                            title="Klik untuk ubah stok"
-                          >
-                            <span className={`${styles.statusBadge} ${p.is_available ? styles.badgeDone : styles.badgePending}`}>
-                              {p.is_available ? 'Tersedia' : 'Habis'}
-                            </span>
-                          </button>
-                        </td>
-                        <td className={styles.tdAction} style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                          {/* Tombol Edit */}
-                          <button
-                            className={styles.actionBtn}
-                            onClick={() => { setEditingProduct(p); setShowProductModal(true); }}
-                          >
-                            Edit
-                          </button>
-                          {/* Tombol Hapus */}
-                          <button
-                            className={styles.actionBtn}
-                            style={{ borderColor: 'rgba(255,80,80,0.3)', color: '#ff6b6b' }}
-                            onClick={() => handleDeleteProduct(p.id, p.name)}
-                          >
-                            Hapus
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ═══════ TAB: PENGATURAN ═══════ */}
-        {activeTab === 'settings' && (
-          <div className={styles.tableSection}>
-            <div className={styles.tableHeader}>
-              <h3 className={styles.tableTitle}>Pengaturan Pajak</h3>
-            </div>
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '400px' }}>
-
-              {/* Toggle Pajak Aktif */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <p style={{ ...labelStyle, marginBottom: '0.2rem', fontSize: '0.8rem' }}>Aktifkan Pajak</p>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>
-                    Pajak akan dihitung otomatis di setiap transaksi
-                  </p>
-                </div>
-                {/* Toggle switch visual */}
-                <button
-                  type="button"
-                  onClick={() => setLocalSettings(s => ({ ...s, pajak_aktif: !s.pajak_aktif }))}
-                  style={{
-                    width: '48px', height: '26px', borderRadius: '13px', border: 'none',
-                    background: localSettings.pajak_aktif ? '#fff' : 'rgba(255,255,255,0.15)',
-                    position: 'relative', cursor: 'pointer', transition: 'background 0.25s', flexShrink: 0,
-                  }}
-                  aria-label="Toggle pajak"
-                >
-                  <span style={{
-                    position: 'absolute', top: '3px',
-                    left: localSettings.pajak_aktif ? '25px' : '3px',
-                    width: '20px', height: '20px', borderRadius: '50%',
-                    background: localSettings.pajak_aktif ? '#000' : 'rgba(255,255,255,0.5)',
-                    transition: 'left 0.25s',
-                  }} />
-                </button>
-              </div>
-
-              {/* Input Persentase Pajak */}
-              <div>
-                <label style={labelStyle}>Persentase Pajak (%)</label>
-                <input
-                  type="number"
-                  min={0} max={100}
-                  value={localSettings.pajak_persen}
-                  onChange={e => setLocalSettings(s => ({ ...s, pajak_persen: e.target.value }))}
-                  disabled={!localSettings.pajak_aktif}
-                  style={{ ...inputStyle, opacity: localSettings.pajak_aktif ? 1 : 0.4, maxWidth: '120px' }}
-                />
-              </div>
-
-              {/* Preview kalkulasi */}
-              {localSettings.pajak_aktif && (
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(255,200,100,0.7)' }}>
-                  Setiap transaksi Rp 100.000 akan dikenakan pajak Rp {Math.round(100000 * (localSettings.pajak_persen / 100)).toLocaleString('id-ID')}
-                </p>
-              )}
-
-              <button
-                onClick={handleSaveSettings}
-                disabled={isSavingSettings}
-                style={{ ...btnPrimaryStyle, maxWidth: '200px', opacity: isSavingSettings ? 0.6 : 1 }}
-              >
-                {isSavingSettings ? 'Menyimpan...' : 'Simpan Pengaturan'}
-              </button>
-            </div>
-          </div>
+        {/* ═══════ TAB: KELOLA MENU & PENGATURAN ═══════ */}
+        {/* Dikelola sepenuhnya oleh ProductManager — termasuk modal & CRUD Supabase */}
+        {(activeTab === 'menu' || activeTab === 'settings') && (
+          <ProductManager
+            products={products}
+            globalSettings={globalSettings}
+            onProductsChange={onProductsChange}
+            onSettingsChange={onSettingsChange}
+            activeTab={activeTab}
+          />
         )}
 
         {/* ═══════ TAB: LAPORAN ANALITIK ═══════ */}
@@ -1019,25 +421,7 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
 
       </main>
 
-      {/* Modal Form Produk */}
-      {showProductModal && (
-        <ProductFormModal
-          initial={editingProduct}
-          onSave={handleSaveProduct}
-          onClose={() => { setShowProductModal(false); setEditingProduct(null); }}
-        />
-      )}
-
-      {/* Modal Konfirmasi Hapus Produk */}
-      <ConfirmationModal
-        isOpen={modalDelete.open}
-        title="Hapus Produk"
-        message={`Yakin ingin menghapus "${modalDelete.name}"? Tindakan ini tidak bisa dibatalkan.`}
-        onConfirm={confirmDeleteProduct}
-        onClose={() => setModalDelete({ open: false, id: null, name: '' })}
-      />
-
-      {/* Modal Notifikasi Sukses */}
+      {/* Modal Notifikasi Sukses (untuk error pesanan) */}
       <SuccessModal
         isOpen={successModal.open}
         title={successModal.title}
