@@ -201,6 +201,19 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
    */
   const [activeTab, setActiveTab] = useState('orders');
 
+  // ── State Live Search & Filter Tabel Pesanan ──────────────────
+  /**
+   * searchQuery — kata kunci pencarian dari input text.
+   * Dicocokkan ke nama pelanggan dan nomor WA (case-insensitive).
+   */
+  const [searchQuery,  setSearchQuery]  = useState('');
+
+  /**
+   * statusFilter — filter status pesanan dari dropdown.
+   * 'Semua' = tampilkan semua, nilai lain = filter ketat.
+   */
+  const [statusFilter, setStatusFilter] = useState('Semua');
+
   // ── State Modal Produk ────────────────────────────────
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct,   setEditingProduct]   = useState(null);
@@ -399,8 +412,33 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
     { title: 'Total Semua Pesanan', value: orders.length,                  suffix: 'Pesanan'  },
   ];
 
-  const totalPages    = Math.ceil(orders.length / itemsPerPage);
-  const currentOrders = orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // ─────────────────────────────────────────────────────────
+  // FILTER DERIVATIF — dijalankan setiap render, tanpa useMemo
+  // karena filternya cepat dan orders biasanya < 1000 baris.
+  // ─────────────────────────────────────────────────────────
+  const filteredOrders = orders.filter(order => {
+    // 1. Filter status — lewati jika pilih "Semua"
+    if (statusFilter !== 'Semua' && order.status !== statusFilter) return false;
+
+    // 2. Filter pencarian — lewati jika query kosong
+    if (searchQuery.trim()) {
+      const q    = searchQuery.toLowerCase();
+      const nama = order.nama?.toLowerCase() ?? '';
+      const wa   = order.nomor_wa?.toLowerCase() ?? '';
+      if (!nama.includes(q) && !wa.includes(q)) return false;
+    }
+
+    return true;
+  });
+
+  // Reset ke halaman 1 setiap kali filter berubah
+  // agar user tidak tersangkut di halaman yang sekarang kosong.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
+  const totalPages    = Math.ceil(filteredOrders.length / itemsPerPage);
+  const currentOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // ─────────────────────────────────────────────────────────
   // DATA PROCESSING UNTUK GRAFIK (useMemo = hanya re-kalkulasi saat orders berubah)
@@ -514,15 +552,94 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
             <div className={styles.tableHeader}>
               <h3 className={styles.tableTitle}>Pesanan Masuk</h3>
               <div className={styles.tableActions}>
-                <span className={styles.tableCount}>{orders.length} Total</span>
+                <span className={styles.tableCount}>
+                  {filteredOrders.length !== orders.length
+                    ? `${filteredOrders.length} dari ${orders.length}`
+                    : `${orders.length} Total`}
+                </span>
                 <button className={styles.refreshBtn} onClick={fetchOrders}>↻ Refresh</button>
               </div>
+            </div>
+
+            {/* ── Bar Pencarian & Filter ─────────────────────────────── */}
+            <div style={{
+              display: 'flex', gap: '0.6rem', flexWrap: 'wrap',
+              marginBottom: '1rem', alignItems: 'center',
+            }}>
+              {/* Input Pencarian */}
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="🔍  Cari nama pelanggan atau nomor WA..."
+                style={{
+                  flex: '1 1 220px', minWidth: '180px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '6px', padding: '0.55rem 0.9rem',
+                  color: '#fff', fontFamily: 'Inter, sans-serif',
+                  fontSize: '0.78rem', outline: 'none',
+                  transition: 'border-color 0.2s',
+                }}
+                onFocus={e  => e.target.style.borderColor = 'rgba(255,255,255,0.35)'}
+                onBlur={e   => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+              />
+
+              {/* Dropdown Filter Status */}
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '6px', padding: '0.55rem 0.75rem',
+                  color: '#fff', fontFamily: 'Inter, sans-serif',
+                  fontSize: '0.78rem', cursor: 'pointer', outline: 'none',
+                  transition: 'border-color 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = 'rgba(255,255,255,0.35)'}
+                onBlur={e  => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+              >
+                <option value="Semua">Semua Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Diproses">Diproses</option>
+                <option value="Selesai">Selesai</option>
+              </select>
+              
+              {/* Tombol Reset — hanya tampil jika ada filter aktif */}
+              {(searchQuery || statusFilter !== 'Semua') && (
+                <button
+                  onClick={() => { setSearchQuery(''); setStatusFilter('Semua'); }}
+                  style={{
+                    background: 'none',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '6px', padding: '0.55rem 0.75rem',
+                    color: 'rgba(255,255,255,0.45)',
+                    fontFamily: 'Inter, sans-serif', fontSize: '0.75rem',
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                    transition: 'color 0.2s, border-color 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                >
+                  ✕ Reset
+                </button>
+              )}
             </div>
 
             {isLoading ? (
               <div className={styles.loadingState}><p className={styles.loadingText}>Memuat data pesanan...</p></div>
             ) : orders.length === 0 ? (
+              /* Belum ada pesanan sama sekali */
               <div className={styles.emptyState}><p className={styles.emptyText}>Belum ada pesanan masuk.</p></div>
+            ) : filteredOrders.length === 0 ? (
+              /* Ada pesanan, tapi tidak ada yang cocok dengan filter */
+              <div className={styles.emptyState}>
+                <p className={styles.emptyText}>
+                  Tidak ada pesanan yang cocok dengan pencarian
+                  {statusFilter !== 'Semua' ? ` & filter "${statusFilter}"` : ''}.
+                </p>
+              </div>
             ) : (
               <>
                 <div className={styles.tableContainer}>
