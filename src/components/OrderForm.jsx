@@ -324,7 +324,7 @@ const OrderForm = ({ products = [], globalSettings = {}, orderItems, setOrderIte
   // RENDER
   // ─────────────────────────────────────────────────────────────
   return (
-    <section className={styles.section} id="order">
+    <section className={styles.section} id="section-pesan">
       <div className={styles.container}>
 
         {/* ── Kiri: heading ──────────────────────────────── */}

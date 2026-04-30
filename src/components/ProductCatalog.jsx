@@ -29,7 +29,11 @@ const ProductCard = ({ product, index, onSelect }) => {
   const tersedia = product.is_available !== false; // default anggap tersedia
 
   const handleOrder = () => {
-    if (tersedia) onSelect(product.id);
+    if (!tersedia) return;
+    onSelect(product.id);
+    // Smooth scroll ke form pemesanan — optional chaining (?.) aman
+    // dipakai di kedua halaman (landing & full_catalog)
+    document.getElementById('section-pesan')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -85,20 +89,13 @@ const ProductCard = ({ product, index, onSelect }) => {
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA: ProductCatalog
 // ─────────────────────────────────────────────────────────────
-const ProductCatalog = ({ products = [], onSelectProduct }) => {
-
-  /**
-   * isModalOpen — state yang mengontrol tampil/tidaknya modal
-   *
-   * false (default) = modal tersembunyi
-   * true            = modal tampil
-   *
-   * Cara kerja conditional rendering:
-   *   {isModalOpen && <div>...</div>}
-   *   Jika isModalOpen = false → React tidak merender apapun
-   *   Jika isModalOpen = true  → React merender <div>...
-   */
-  const [isModalOpen, setIsModalOpen] = useState(false);
+/**
+ * onViewAll  — callback dari App.jsx untuk navigasi ke halaman Full Catalog.
+ *              Hanya digunakan di mode landing (hideViewAll tidak di-set).
+ * hideViewAll — jika true, tombol "Lihat Semua Menu" disembunyikan.
+ *              Digunakan saat ProductCatalog dipakai di dalam FullCatalogView.
+ */
+const ProductCatalog = ({ products = [], onSelectProduct, onViewAll, hideViewAll = false }) => {
 
   return (
     <section id="catalog" className={styles.catalogSection}>
@@ -135,64 +132,27 @@ const ProductCatalog = ({ products = [], onSelectProduct }) => {
         ))}
       </div>
 
-      {/* ── Tombol Lihat Semua Menu ─────────────────────── */}
-      <motion.div
-        className={styles.viewAllWrap}
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.5 }}
-        transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      >
-        {/* setIsModalOpen(true) mengubah state → React re-render → modal muncul */}
-        <button
-          className={styles.viewAllBtn}
-          onClick={() => setIsModalOpen(true)}
-        >
-          <span>Lihat Semua Menu</span>
-          <span className={styles.btnArrow}>↗</span>
-        </button>
-      </motion.div>
-
       {/*
-        ── Modal "Coming Soon" ─────────────────────────────
-        Hanya dirender jika isModalOpen === true.
-
-        Struktur:
-          modalOverlay  — latar gelap fullscreen, klik di sini = tutup
-            modalBox    — kotak konten di tengah
-              (klik di sini TIDAK menutup, karena stopPropagation)
+        ── Tombol Lihat Semua Menu ───────────────────────────
+        Disembunyikan saat hideViewAll === true (mode FullCatalogView).
+        Memanggil onViewAll() dari App.jsx untuk navigasi ke 'full_catalog'.
       */}
-      {isModalOpen && (
-        <div
-          className={styles.modalOverlay}
-          onClick={() => setIsModalOpen(false)}
+      {!hideViewAll && (
+        <motion.div
+          className={styles.viewAllWrap}
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/*
-            e.stopPropagation() — mencegah event klik di dalam kotak
-            meneruskan (bubble up) ke .modalOverlay.
-            Tanpa ini: klik di dalam kotak akan menutup modal.
-          */}
-          <div
-            className={styles.modalBox}
-            onClick={(e) => e.stopPropagation()}
+          <button
+            className={styles.viewAllBtn}
+            onClick={() => onViewAll?.()}
           >
-            <span className={styles.modalEyebrow}>Segera Hadir</span>
-            <h3   className={styles.modalTitle}>Coming Soon</h3>
-            <p    className={styles.modalText}>
-              Katalog lengkap sedang diracik oleh barista kami.
-              <br />
-              Nantikan pengalaman memesan yang lebih lengkap.
-            </p>
-            <div className={styles.modalDivider} />
-            {/* setIsModalOpen(false) = tutup modal */}
-            <button
-              className={styles.modalCloseBtn}
-              onClick={() => setIsModalOpen(false)}
-            >
-              Kembali
-            </button>
-          </div>
-        </div>
+            <span>Lihat Semua Menu</span>
+            <span className={styles.btnArrow}>↗</span>
+          </button>
+        </motion.div>
       )}
 
     </section>

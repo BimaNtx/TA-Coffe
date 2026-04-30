@@ -99,10 +99,80 @@ const ProductFormModal = ({ initial, onSave, onClose }) => {
   );
 };
 
-const labelStyle = { display: 'block', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.4)', marginBottom: '0.4rem' };
-const inputStyle = { width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.6rem 0.8rem', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', boxSizing: 'border-box' };
-const btnPrimaryStyle   = { flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
+const labelStyle       = { display: 'block', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.4)', marginBottom: '0.4rem' };
+const inputStyle       = { width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.6rem 0.8rem', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', boxSizing: 'border-box' };
+const btnPrimaryStyle  = { flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
 const btnSecondaryStyle = { flex: 1, background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
+
+// ─────────────────────────────────────────────────────────────
+// MODAL: KONFIRMASI HAPUS
+// Props: isOpen, title, message, onConfirm, onClose
+// ─────────────────────────────────────────────────────────────
+const ConfirmationModal = ({ isOpen, title, message, onConfirm, onClose }) => {
+  if (!isOpen) return null;
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 2000,
+      background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      animation: 'fadeIn 0.2s ease',
+    }}>
+      <div style={{
+        background: '#0a0808', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '10px', padding: '2rem', width: '100%', maxWidth: '360px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.6)', textAlign: 'center',
+      }}>
+        <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>⚠️</div>
+        <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.4rem', color: '#fff', marginBottom: '0.6rem' }}>
+          {title}
+        </h3>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+          {message}
+        </p>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={onClose} style={btnSecondaryStyle}>Batal</button>
+          <button
+            onClick={onConfirm}
+            style={{ ...btnPrimaryStyle, background: '#c0392b', color: '#fff', border: 'none' }}
+          >
+            Ya, Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// MODAL: NOTIFIKASI SUKSES
+// Props: isOpen, title, message, onClose
+// ─────────────────────────────────────────────────────────────
+const SuccessModal = ({ isOpen, title, message, onClose }) => {
+  if (!isOpen) return null;
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 2000,
+      background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      animation: 'fadeIn 0.2s ease',
+    }}>
+      <div style={{
+        background: '#0a0808', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '10px', padding: '2rem', width: '100%', maxWidth: '360px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.6)', textAlign: 'center',
+      }}>
+        <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>✅</div>
+        <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.4rem', color: '#fff', marginBottom: '0.6rem' }}>
+          {title}
+        </h3>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+          {message}
+        </p>
+        <button onClick={onClose} style={{ ...btnPrimaryStyle, flex: 'none', width: '100%' }}>OK</button>
+      </div>
+    </div>
+  );
+};
 
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA
@@ -131,9 +201,25 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
    */
   const [activeTab, setActiveTab] = useState('orders');
 
-  // ── State Modal Produk ────────────────────────────────────
+  // ── State Modal Produk ────────────────────────────────
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct,   setEditingProduct]   = useState(null);
+
+  // ── State Custom Modals ───────────────────────────────
+  /**
+   * modalDelete — mengontrol ConfirmationModal untuk hapus produk.
+   * { open: bool, id: string, name: string }
+   */
+  const [modalDelete, setModalDelete] = useState({ open: false, id: null, name: '' });
+
+  /**
+   * successModal — mengontrol SuccessModal setelah operasi DB berhasil.
+   * { open: bool, title: string, message: string }
+   */
+  const [successModal, setSuccessModal] = useState({ open: false, title: '', message: '' });
+
+  /** Helper: tampilkan SuccessModal dengan pesan tertentu */
+  const showSuccess = (title, message) => setSuccessModal({ open: true, title, message });
 
   // ── State Pengaturan Lokal ─────────────────────────────────
   /**
@@ -179,7 +265,10 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
     else return;
 
     const { error } = await supabase.from('pesanan').update({ status: newStatus }).eq('id', id);
-    if (error) { alert('Gagal update status: ' + error.message); return; }
+    if (error) {
+      showSuccess('Gagal Update Status', 'Terjadi kesalahan: ' + error.message);
+      return;
+    }
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
   };
 
@@ -223,9 +312,12 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
       })
       .eq('id', 1);
     setIsSavingSettings(false);
-    if (error) { alert('Gagal simpan pengaturan: ' + error.message); return; }
-    onSettingsChange(); // minta App.jsx refetch globalSettings
-    alert('Pengaturan berhasil disimpan!');
+    if (error) {
+      showSuccess('Gagal Menyimpan', 'Terjadi kesalahan: ' + error.message);
+      return;
+    }
+    onSettingsChange();
+    showSuccess('Pengaturan Disimpan', 'Pengaturan pajak berhasil disimpan ke database.');
   };
 
   // ─────────────────────────────────────────────────────────
@@ -239,47 +331,61 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
    */
   const handleSaveProduct = async ({ name, price }) => {
     if (editingProduct) {
-      // UPDATE produk yang sudah ada
       const { error } = await supabase
-        .from('produk')
-        .update({ name, price })
-        .eq('id', editingProduct.id);
-      if (error) { alert('Gagal update: ' + error.message); return; }
+        .from('produk').update({ name, price }).eq('id', editingProduct.id);
+      if (error) {
+        showSuccess('Gagal Update', 'Terjadi kesalahan: ' + error.message);
+        return;
+      }
     } else {
-      // INSERT produk baru
+      // Generate id dari nama produk: spasi → strip, huruf kecil
+      // Contoh: "Semeru Espresso" → "semeru-espresso"
+      const generatedId = name.toLowerCase().trim().replace(/\s+/g, '-');
       const { error } = await supabase
-        .from('produk')
-        .insert({ name, price, is_available: true });
-      if (error) { alert('Gagal tambah: ' + error.message); return; }
+        .from('produk').insert({ id: generatedId, name, price, is_available: true });
+      if (error) {
+        showSuccess('Gagal Tambah', 'Terjadi kesalahan: ' + error.message);
+        return;
+      }
     }
     setShowProductModal(false);
     setEditingProduct(null);
-    onProductsChange(); // minta App.jsx untuk refresh state products
+    onProductsChange();
+    showSuccess(
+      editingProduct ? 'Produk Diperbarui' : 'Produk Ditambahkan',
+      `"${name}" berhasil ${editingProduct ? 'diperbarui' : 'ditambahkan'} ke daftar menu.`
+    );
   };
 
-  /**
-   * handleToggleAvailable — toggle is_available (aktif/habis)
-   * Langsung update di database dan perbarui state di App.jsx.
-   */
   const handleToggleAvailable = async (product) => {
     const newVal = !product.is_available;
     const { error } = await supabase
-      .from('produk')
-      .update({ is_available: newVal })
-      .eq('id', product.id);
-    if (error) { alert('Gagal ubah stok: ' + error.message); return; }
+      .from('produk').update({ is_available: newVal }).eq('id', product.id);
+    if (error) {
+      showSuccess('Gagal Ubah Stok', 'Terjadi kesalahan: ' + error.message);
+      return;
+    }
     onProductsChange();
   };
 
   /**
-   * handleDeleteProduct — hapus produk dari database
-   * Menampilkan konfirmasi sederhana sebelum menghapus.
+   * handleDeleteProduct — buka ConfirmationModal dulu.
+   * Eksekusi delete ke Supabase HANYA jika user konfirmasi di modal.
    */
-  const handleDeleteProduct = async (id, name) => {
-    if (!window.confirm(`Hapus produk "${name}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+  const handleDeleteProduct = (id, name) => {
+    setModalDelete({ open: true, id, name });
+  };
+
+  const confirmDeleteProduct = async () => {
+    const { id, name } = modalDelete;
+    setModalDelete({ open: false, id: null, name: '' });
     const { error } = await supabase.from('produk').delete().eq('id', id);
-    if (error) { alert('Gagal hapus: ' + error.message); return; }
+    if (error) {
+      showSuccess('Gagal Hapus', 'Terjadi kesalahan: ' + error.message);
+      return;
+    }
     onProductsChange();
+    showSuccess('Produk Dihapus', `"${name}" berhasil dihapus dari daftar menu.`);
   };
 
   // ─────────────────────────────────────────────────────────
@@ -804,6 +910,23 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
           onClose={() => { setShowProductModal(false); setEditingProduct(null); }}
         />
       )}
+
+      {/* Modal Konfirmasi Hapus Produk */}
+      <ConfirmationModal
+        isOpen={modalDelete.open}
+        title="Hapus Produk"
+        message={`Yakin ingin menghapus "${modalDelete.name}"? Tindakan ini tidak bisa dibatalkan.`}
+        onConfirm={confirmDeleteProduct}
+        onClose={() => setModalDelete({ open: false, id: null, name: '' })}
+      />
+
+      {/* Modal Notifikasi Sukses */}
+      <SuccessModal
+        isOpen={successModal.open}
+        title={successModal.title}
+        message={successModal.message}
+        onClose={() => setSuccessModal({ open: false, title: '', message: '' })}
+      />
 
       {/*
         ── STRUK CETAK KASIR ────────────────────────────────────────

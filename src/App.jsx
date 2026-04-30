@@ -123,7 +123,7 @@ const SessionExpiredModal = ({ onLoginBack }) => (
  */
 const LandingPageView = ({
   navigateTo, products, globalSettings, orderItems, setOrderItems,
-  smartAddProduct, logoRef, y, scale, scrollY
+  smartAddProduct, logoRef, y, scale, scrollY, onViewAll,
 }) => (
   <div
     className="app-container"
@@ -142,7 +142,8 @@ const LandingPageView = ({
     <IntroSection />
     <BeanSection />
 
-    <ProductCatalog products={products} onSelectProduct={smartAddProduct} />
+    {/* Hanya 3 produk teratas di landing — tombol "Lihat Semua" menuju Full Catalog */}
+    <ProductCatalog products={products} onSelectProduct={smartAddProduct} onViewAll={onViewAll} />
     {/* globalSettings diteruskan agar kalkulasi pajak menggunakan nilai dari database */}
     <OrderForm
       products={products}
@@ -152,6 +153,78 @@ const LandingPageView = ({
     />
 
     <Footer navigateTo={navigateTo} />
+  </div>
+);
+
+// ─────────────────────────────────────────────────────────────
+// FULL CATALOG VIEW — menampilkan SEMUA produk dengan header + tombol kembali
+// ─────────────────────────────────────────────────────────────
+const FullCatalogView = ({ products, onSelectProduct, onBack, orderItems, setOrderItems, globalSettings }) => (
+  <div
+    style={{
+      minHeight: '100vh',
+      backgroundColor: '#000',
+      paddingTop: '5rem',
+    }}
+  >
+    {/* ── Tombol Kembali ── */}
+    <div style={{ padding: '0 2rem 0', maxWidth: '1200px', margin: '0 auto' }}>
+      <button
+        onClick={onBack}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+          background: 'none', border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: '6px', padding: '0.5rem 1.1rem',
+          fontFamily: 'Inter, sans-serif', fontSize: '0.72rem',
+          letterSpacing: '0.1em', color: 'rgba(255,255,255,0.6)',
+          cursor: 'pointer', transition: 'color 0.2s, border-color 0.2s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+      >
+        ← Kembali ke Beranda
+      </button>
+    </div>
+
+    {/* ── Heading ── */}
+    <div style={{ textAlign: 'center', padding: '2rem 2rem 0' }}>
+      <span style={{
+        display: 'block', fontFamily: 'Inter, sans-serif',
+        fontSize: '0.65rem', letterSpacing: '0.2em',
+        color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase',
+        marginBottom: '0.75rem',
+      }}>
+        Full Collection
+      </span>
+      <h1 style={{
+        fontFamily: 'Cormorant Garamond, Georgia, serif',
+        fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 700,
+        color: '#fff', margin: '0 0 0.5rem',
+      }}>
+        Semua Menu Kami
+      </h1>
+      <p style={{
+        fontFamily: 'Inter, sans-serif', fontSize: '0.85rem',
+        color: 'rgba(255,255,255,0.4)', margin: 0,
+      }}>
+        {products.length} produk tersedia
+      </p>
+    </div>
+
+    {/* ── Grid Produk Penuh — pakai ulang ProductCatalog tanpa tombol "Lihat Semua" ── */}
+    <ProductCatalog
+      products={products}
+      onSelectProduct={onSelectProduct}
+      hideViewAll
+    />
+
+    {/* ── Form Pemesanan — tersedia langsung di halaman Full Catalog ── */}
+    <OrderForm
+      products={products}
+      globalSettings={globalSettings}
+      orderItems={orderItems}
+      setOrderItems={setOrderItems}
+    />
   </div>
 );
 
@@ -182,7 +255,12 @@ function App() {
    * Jika tidak ada nilai tersimpan (buka pertama kali), fallback ke 'landing'.
    */
   const [currentView, setCurrentView] = useState(() => {
-    return localStorage.getItem('bimaCoffeeView') || 'landing';
+    const saved = localStorage.getItem('bimaCoffeeView');
+    // Whitelist nilai yang valid. Jika localStorage menyimpan nilai
+    // tak dikenal (sisa cache undo/restore seperti 'full_catalog'),
+    // paksa fallback ke 'landing' agar tidak terjadi blank screen.
+    const VALID_VIEWS = ['landing', 'auth', 'admin', 'full_catalog'];
+    return VALID_VIEWS.includes(saved) ? saved : 'landing';
   });
 
   /**
@@ -500,7 +578,7 @@ function App() {
       {currentView === 'landing' && (
         <LandingPageView
           navigateTo={navigateTo}
-          products={products}
+          products={products.slice(0, 3)}
           globalSettings={globalSettings}
           orderItems={orderItems}
           setOrderItems={setOrderItems}
@@ -509,6 +587,18 @@ function App() {
           y={y}
           scale={scale}
           scrollY={scrollY}
+          onViewAll={() => navigateTo('full_catalog')}
+        />
+      )}
+
+      {currentView === 'full_catalog' && (
+        <FullCatalogView
+          products={products}
+          onSelectProduct={smartAddProduct}
+          onBack={() => navigateTo('landing')}
+          orderItems={orderItems}
+          setOrderItems={setOrderItems}
+          globalSettings={globalSettings}
         />
       )}
 
