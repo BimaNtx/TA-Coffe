@@ -16,217 +16,27 @@
 
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
-import { useScroll, useTransform, useSpring, motion } from 'framer-motion';
+import { useScroll, useTransform, useSpring } from 'framer-motion';
 
-import Navbar          from './components/Navbar';
-import Hero            from './components/Hero';
-import IntroSection    from './components/IntroSection';
-import BeanSection     from './components/BeanSection';
-import ProductCatalog  from './components/ProductCatalog';
-import OrderForm       from './components/OrderForm';
-import Footer          from './components/Footer';
 import AuthPage        from './components/AuthPage';
 import AdminDashboard  from './components/AdminDashboard';
+import SessionExpiredModal from './components/SessionExpiredModal';
+import LandingPageView    from './components/LandingPageView';
+import FullCatalogView    from './components/FullCatalogView';
 
 import './App.css';
 
+// SessionExpiredModal → src/components/SessionExpiredModal.jsx
+// LandingPageView     → src/components/LandingPageView.jsx
+// FullCatalogView     → src/components/FullCatalogView.jsx
+
 // ─────────────────────────────────────────────────────────────
-// KONSTANTA ANIMASI LOGO
+// KONSTANTA ANIMASI LOGO (dipakai App untuk kalkulasi y & scale
+// yang kemudian di-pass sebagai props ke LandingPageView)
 // ─────────────────────────────────────────────────────────────
 const NAVBAR_HEIGHT = 80;
 const ANIM_END      = 300;
 const SPRING        = { stiffness: 400, damping: 40, mass: 1, restDelta: 0.001 };
-
-// ─────────────────────────────────────────────────────────────
-// MODAL: SESI BERAKHIR (Session Expired)
-// ─────────────────────────────────────────────────────────────
-/**
- * SessionExpiredModal — ditampilkan saat Auto-Logout terpicu.
- * Menggantikan alert() browser agar tetap senada dark theme.
- *
- * @prop {function} onLoginBack — dipanggil saat tombol "Login Kembali" diklik
- */
-const SessionExpiredModal = ({ onLoginBack }) => (
-  <div style={{
-    position: 'fixed', inset: 0, zIndex: 9999,
-    background: 'rgba(0, 0, 0, 0.80)',
-    backdropFilter: 'blur(6px)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    animation: 'fadeIn 0.25s ease',
-  }}>
-    <div style={{
-      background: '#0a0808',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-      borderRadius: '12px',
-      padding: '2.5rem 2rem',
-      width: '100%', maxWidth: '380px',
-      textAlign: 'center',
-      boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-    }}>
-      {/* Ikon */}
-      <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔒</div>
-
-      {/* Judul */}
-      <h2 style={{
-        fontFamily: 'Cormorant Garamond, Georgia, serif',
-        fontSize: '1.6rem', fontWeight: 700,
-        color: '#fff', marginBottom: '0.75rem', letterSpacing: '0.02em',
-      }}>
-        Sesi Berakhir
-      </h2>
-
-      {/* Deskripsi */}
-      <p style={{
-        fontFamily: 'Inter, sans-serif',
-        fontSize: '0.82rem', lineHeight: 1.65,
-        color: 'rgba(255, 255, 255, 0.45)',
-        marginBottom: '2rem',
-      }}>
-        Sesi Anda telah berakhir secara otomatis karena tidak ada aktivitas.
-        Silakan masuk kembali untuk melanjutkan.
-      </p>
-
-      {/* Tombol CTA */}
-      <button
-        onClick={onLoginBack}
-        style={{
-          width: '100%',
-          background: '#fff', color: '#000',
-          border: 'none', borderRadius: '6px',
-          padding: '0.75rem 1rem',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '0.72rem', letterSpacing: '0.14em',
-          fontWeight: 600, cursor: 'pointer',
-          transition: 'opacity 0.2s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-      >
-        LOGIN KEMBALI
-      </button>
-    </div>
-  </div>
-);
-
-// ─────────────────────────────────────────────────────────────
-// LANDING PAGE VIEW — dibungkus agar bisa di-mount/unmount bersih
-// ─────────────────────────────────────────────────────────────
-/**
- * LandingPageView menerima props dari App:
- *   @prop {function} navigateTo
- *   @prop {Array}    products        — daftar produk dari Supabase
- *   @prop {object}   globalSettings  — pengaturan pajak dari Supabase
- *   @prop {Array}    orderItems
- *   @prop {function} setOrderItems
- *   @prop {function} smartAddProduct
- *   @prop {object}   logoRef, y, scale, scrollY
- */
-const LandingPageView = ({
-  navigateTo, products, globalSettings, orderItems, setOrderItems,
-  smartAddProduct, logoRef, y, scale, scrollY, onViewAll,
-}) => (
-  <div
-    className="app-container"
-    style={{ minHeight: '100vh', position: 'relative', backgroundColor: '#000000' }}
-  >
-    <Navbar scrollY={scrollY} navbarHeight={NAVBAR_HEIGHT} animEnd={ANIM_END} />
-
-    <div className="logo-anchor">
-      <motion.div ref={logoRef} className="logo-motion" style={{ y, scale }}>
-        <span className="logo-line">BIMA</span>
-        <span className="logo-line">COFFEE</span>
-      </motion.div>
-    </div>
-
-    <Hero />
-    <IntroSection />
-    <BeanSection />
-
-    {/* Hanya 3 produk teratas di landing — tombol "Lihat Semua" menuju Full Catalog */}
-    <ProductCatalog products={products} onSelectProduct={smartAddProduct} onViewAll={onViewAll} />
-    {/* globalSettings diteruskan agar kalkulasi pajak menggunakan nilai dari database */}
-    <OrderForm
-      products={products}
-      globalSettings={globalSettings}
-      orderItems={orderItems}
-      setOrderItems={setOrderItems}
-    />
-
-    <Footer navigateTo={navigateTo} />
-  </div>
-);
-
-// ─────────────────────────────────────────────────────────────
-// FULL CATALOG VIEW — menampilkan SEMUA produk dengan header + tombol kembali
-// ─────────────────────────────────────────────────────────────
-const FullCatalogView = ({ products, onSelectProduct, onBack, orderItems, setOrderItems, globalSettings }) => (
-  <div
-    style={{
-      minHeight: '100vh',
-      backgroundColor: '#000',
-      paddingTop: '5rem',
-    }}
-  >
-    {/* ── Tombol Kembali ── */}
-    <div style={{ padding: '0 2rem 0', maxWidth: '1200px', margin: '0 auto' }}>
-      <button
-        onClick={onBack}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-          background: 'none', border: '1px solid rgba(255,255,255,0.15)',
-          borderRadius: '6px', padding: '0.5rem 1.1rem',
-          fontFamily: 'Inter, sans-serif', fontSize: '0.72rem',
-          letterSpacing: '0.1em', color: 'rgba(255,255,255,0.6)',
-          cursor: 'pointer', transition: 'color 0.2s, border-color 0.2s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
-      >
-        ← Kembali ke Beranda
-      </button>
-    </div>
-
-    {/* ── Heading ── */}
-    <div style={{ textAlign: 'center', padding: '2rem 2rem 0' }}>
-      <span style={{
-        display: 'block', fontFamily: 'Inter, sans-serif',
-        fontSize: '0.65rem', letterSpacing: '0.2em',
-        color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase',
-        marginBottom: '0.75rem',
-      }}>
-        Full Collection
-      </span>
-      <h1 style={{
-        fontFamily: 'Cormorant Garamond, Georgia, serif',
-        fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 700,
-        color: '#fff', margin: '0 0 0.5rem',
-      }}>
-        Semua Menu Kami
-      </h1>
-      <p style={{
-        fontFamily: 'Inter, sans-serif', fontSize: '0.85rem',
-        color: 'rgba(255,255,255,0.4)', margin: 0,
-      }}>
-        {products.length} produk tersedia
-      </p>
-    </div>
-
-    {/* ── Grid Produk Penuh — pakai ulang ProductCatalog tanpa tombol "Lihat Semua" ── */}
-    <ProductCatalog
-      products={products}
-      onSelectProduct={onSelectProduct}
-      hideViewAll
-    />
-
-    {/* ── Form Pemesanan — tersedia langsung di halaman Full Catalog ── */}
-    <OrderForm
-      products={products}
-      globalSettings={globalSettings}
-      orderItems={orderItems}
-      setOrderItems={setOrderItems}
-    />
-  </div>
-);
 
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA APP
