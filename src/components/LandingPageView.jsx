@@ -34,46 +34,43 @@ const LandingPageView = ({
 }) => (
   <div
     className="app-container"
-    style={{ minHeight: '100vh', position: 'relative', backgroundColor: '#18181B' }}
+    style={{ minHeight: '100vh', position: 'relative', backgroundColor: '#000000' }}
   >
     <Navbar scrollY={scrollY} navbarHeight={NAVBAR_HEIGHT} animEnd={ANIM_END} />
 
 <div className="logo-anchor" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-      <motion.div 
-        ref={logoRef} 
-        className="logo-motion" 
-        style={{ 
+      <motion.div
+        ref={logoRef}
+        className="logo-motion"
+        style={{
           y, scale,
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           justifyContent: 'center',
-          lineHeight: '1' /* Mencegah jarak bawaan browser */
         }}
       >
-        {/* Teks BIMA: Serif, tegas, berjarak */}
-        <span style={{ 
-          fontFamily: "'Playfair Display', serif", 
-          fontSize: 'clamp(3rem, 8vw, 6rem)', 
-          letterSpacing: '0.25em',
-          fontWeight: '700',
-          color: '#F3F4F6',
-          zIndex: 1
+        <span style={{
+          fontFamily: "'Inter', sans-serif",
+          fontSize: 'clamp(5rem, 15vw, 12rem)',
+          fontWeight: '900',
+          lineHeight: '0.85',
+          letterSpacing: '-0.02em',
+          color: '#FFFFFF',
+          margin: 0
         }}>
           BIMA
         </span>
-
-        {/* Teks Coffee: Script, tumpang tindih, bersambung */}
-        <span style={{ 
-          fontFamily: "'Pinyon Script', cursive", 
-          fontSize: 'clamp(4.5rem, 11vw, 8.5rem)', 
-          marginTop: '-0.35em', /* Trik margin negatif untuk tumpang tindih */
-          color: '#D1D5DB', 
-          transform: 'rotate(-4deg)', 
-          zIndex: 2,
-          textShadow: '0px 10px 20px rgba(0,0,0,0.8)' 
+        <span style={{
+          fontFamily: "'Inter', sans-serif",
+          fontSize: 'clamp(5rem, 15vw, 12rem)',
+          fontWeight: '900',
+          lineHeight: '0.85',
+          letterSpacing: '-0.02em',
+          color: '#FFFFFF',
+          margin: 0
         }}>
-          Coffee
+          COFFEE
         </span>
       </motion.div>
     </div>

@@ -37,19 +37,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(--text-secondary);
-  opacity: 0.8;
+  color: #FFFFFF;
   cursor: pointer;
 }
 
 .scrollText {
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   margin-bottom: 8px;
   display: block;
+  color: #FFFFFF;
 }
 
 .scrollIcon {
-  color: var(--accent-light);
+  color: #FFFFFF;
 }

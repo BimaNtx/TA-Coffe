@@ -42,7 +42,7 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
    */
   const bgColor = useTransform(
     glassFactor,
-    (v) => `rgba(10, 8, 8, ${v * 0.55})`
+    (v) => `rgba(0, 0, 0, ${v})`
   );
 
   /**
