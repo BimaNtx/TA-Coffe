@@ -5,8 +5,7 @@
  *
  * Fitur animasi yang ada di section ini:
  *   1. Bunga kopi (flower.png) — berputar dan bergerak naik saat scroll
- *   2. Garis SVG  — "menggambar dirinya sendiri" dari bunga ke arah teks
- *   3. Teks berjenjang — muncul satu per satu dengan jeda (stagger)
+ *   2. Teks berjenjang — muncul satu per satu dengan jeda (stagger)
  *
  * Semua animasi TERIKAT pada scroll — jika user berhenti scroll,
  * animasi juga ikut berhenti (tidak ada loop atau timer).
@@ -75,35 +74,6 @@ const IntroSection = () => {
   const rawFlowerY = useTransform(scrollYProgress, [0, 1], [60, -60]);
   const flowerY    = useSpring(rawFlowerY, SPRING);
 
-  // ─────────────────────────────────────────────────────────────
-  // ANIMASI GARIS SVG (Path Drawing)
-  // ─────────────────────────────────────────────────────────────
-
-  /**
-   * pathLength adalah property khusus Framer Motion untuk SVG.
-   *
-   * Nilai 0 = garis belum tergambar sama sekali
-   * Nilai 1 = garis sudah tergambar penuh
-   *
-   * Dengan memetakan scroll progress ke pathLength,
-   * kita bisa membuat garis "menggambar dirinya sendiri" seiring scroll.
-   */
-  const rawPathLength  = useTransform(scrollYProgress, [0.1, 0.5], [0, 1]);
-  const pathLength     = useSpring(rawPathLength, SPRING);
-
-  /**
-   * pathOpacity — garis muncul dan menghilang secara otomatis.
-   * Punya 4 breakpoint: muncul cepat, bertahan, lalu memudar.
-   *
-   * [0.08, 0.15, 0.55, 0.65] → [0, 0.6, 0.6, 0]
-   * Artinya: muncul di scroll 8-15%, bertahan hingga 55%, lalu hilang di 55-65%
-   */
-  const rawPathOpacity = useTransform(
-    scrollYProgress,
-    [0.08, 0.15, 0.55, 0.65],
-    [0,    0.6,  0.6,  0]
-  );
-  const pathOpacity = useSpring(rawPathOpacity, SPRING);
 
   // ─────────────────────────────────────────────────────────────
   // TEKS BERJENJANG (STAGGER)
@@ -164,39 +134,14 @@ const IntroSection = () => {
 
       <div className={styles.container}>
 
-        {/* ── Kolom Kiri: Bunga + Garis SVG ─────────────────── */}
+        {/* ── Kolom Kiri: Bunga ────────────────────────────── */}
         <div className={styles.flowerCol}>
-
-          {/*
-            motion.img memungkinkan kita mengaplikasikan nilai animasi Framer Motion
-            langsung ke elemen <img> melalui prop `style`.
-            `rotate` dan `y` berasal dari useTransform + useSpring di atas.
-          */}
           <motion.img
             src="/flower.png"
             alt="White coffee flower"
             className={styles.flower}
             style={{ rotate, y: flowerY }}
           />
-
-          {/*
-            SVG dengan pathLength — "menggambar dirinya sendiri" seiring scroll.
-            motion.path mendukung animasi `pathLength` secara native.
-          */}
-          <motion.svg
-            className={styles.pathSvg}
-            viewBox="0 0 300 200"
-            fill="none"
-            style={{ opacity: pathOpacity }}
-          >
-            <motion.path
-              d="M 60 20 C 120 20, 140 100, 220 100 C 260 100, 280 60, 300 80"
-              stroke="rgba(245, 240, 235, 0.5)"
-              strokeWidth="0.5"
-              strokeLinecap="round"
-              style={{ pathLength }}
-            />
-          </motion.svg>
         </div>
 
         {/* ── Kolom Kanan: Teks Berjenjang ─────────────────────── */}

@@ -30,12 +30,11 @@
   flex-direction: column;
   gap: 4px;
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.15em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #FFFFFF;
-  opacity: 0.4;
   line-height: 1.4;
   z-index: 1;
 }
@@ -72,27 +71,14 @@
 }
 
 .flower {
-  width: clamp(220px, 28vw, 400px);
+  width: clamp(300px, 40vw, 560px);
   height: auto;
   object-fit: contain;
   will-change: transform;
-  filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.5));
   position: relative;
   z-index: 2;
 }
 
-/* ── SVG connector path ──────────────────────────────────── */
-
-.pathSvg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 300px;
-  height: 200px;
-  z-index: 1;
-  overflow: visible;
-  pointer-events: none;
-}
 
 /* ── Right column: text ──────────────────────────────────── */
 
@@ -170,10 +156,6 @@
 
   /* Hide corner metadata on mobile to keep it clean */
   .meta {
-    display: none;
-  }
-
-  .pathSvg {
     display: none;
   }
 }
