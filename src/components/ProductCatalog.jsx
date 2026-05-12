@@ -43,7 +43,6 @@ const ProductCard = ({ product, index, onSelect }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.6, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -6, transition: { duration: 0.25 } }}
     >
       <div className={styles.cardImage}>
         <img
@@ -56,9 +55,9 @@ const ProductCard = ({ product, index, onSelect }) => {
         {!tersedia && (
           <span style={{
             position: 'absolute', top: '0.75rem', right: '0.75rem',
-            background: 'rgba(0,0,0,0.75)', color: '#ff6b6b',
-            fontSize: '0.65rem', letterSpacing: '0.12em',
-            padding: '0.25rem 0.6rem', borderRadius: '3px',
+            background: '#000000', color: '#FFFFFF',
+            fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.12em',
+            padding: '0.25rem 0.6rem', border: '1px solid #FFFFFF',
           }}>HABIS</span>
         )}
       </div>

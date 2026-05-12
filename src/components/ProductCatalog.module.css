@@ -1,13 +1,13 @@
 /* ════════════════════════════════════════════════════════════
-   ProductCatalog.module.css
-   Penamaan class: deskriptif dan mudah dibaca siswa pemula
-═══════════════════════════════════════════════════════════ */
+   ProductCatalog.module.css — High-Contrast Minimalism
+   Tidak ada border-radius, tidak ada box-shadow.
+   ════════════════════════════════════════════════════════════ */
 
 /* ── Section wrapper ─────────────────────────────────────── */
 
 .catalogSection {
   width: 100%;
-  background-color: #0A0808;
+  background-color: #000000;
   padding: 6rem 5%;
 }
 
@@ -24,42 +24,41 @@
 
 .eyebrow {
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  letter-spacing: 0.32em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
+  color: #FFFFFF;
 }
 
 .sectionTitle {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Inter', sans-serif;
   font-size: clamp(2rem, 5vw, 3.8rem);
-  font-weight: 600;
-  color: #F3F4F6;
-  letter-spacing: 0.04em;
-  line-height: 1.1;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
 }
 
 .sectionSubtitle {
   font-family: 'Inter', sans-serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.75);
+  color: #D1D5DB;
   max-width: 460px;
   line-height: 1.7;
 }
 
 /* ── Grid 3 kolom ────────────────────────────────────────── */
-/*
-  3 kolom di desktop → 2 kolom di tablet → 1 kolom di HP
-*/
 
 .catalogGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 1px;                    /* Gap 1px → garis grid terlihat dari background */
   max-width: 1280px;
   margin: 0 auto;
+  background-color: #333333;  /* Warna "garis" grid */
+  border: 1px solid #333333;
 }
 
 @media (max-width: 900px) {
@@ -71,7 +70,6 @@
 @media (max-width: 560px) {
   .catalogGrid {
     grid-template-columns: 1fr;
-    gap: 1.2rem;
   }
 }
 
@@ -80,19 +78,16 @@
 .productCard {
   display: flex;
   flex-direction: column;
-  background-color: #0d0d0d;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 8px;
-  overflow: hidden;
-  will-change: transform;     /* memberi tahu browser untuk menyiapkan GPU */
+  background-color: #000000;
   cursor: default;
 }
 
 /* Area foto */
 .cardImage {
+  position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background-color: #141414;
+  background-color: #111111;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -104,7 +99,6 @@
   max-width: 160px;
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.75));
 }
 
 /* Area teks */
@@ -113,41 +107,15 @@
   flex-direction: column;
   gap: 0.6rem;
   padding: 1.5rem;
-  flex: 1;                    /* mengisi sisa tinggi kartu */
-}
-
-.originTag {
-  font-family: 'Inter', monospace;
-  font-size: 0.9rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #9CA3AF;
+  flex: 1;
 }
 
 .productName {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
-  font-weight: 600;
-  color: #f5f0eb;
-  letter-spacing: 0.02em;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 700;
+  color: #FFFFFF;
   line-height: 1.2;
-}
-
-.tastingNotes {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #9CA3AF;
-}
-
-.productDesc {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 400;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.75);
 }
 
 /* Footer kartu: harga + tombol */
@@ -158,7 +126,7 @@
   gap: 1rem;
   margin-top: auto;
   padding-top: 1.2rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid #333333;
 }
 
 .priceBlock {
@@ -168,45 +136,38 @@
 }
 
 .price {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #F3F4F6;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #FFFFFF;
 }
 
-.weight {
-  font-family: 'Inter', monospace;
-  font-size: 0.9rem;
-  letter-spacing: 0.15em;
-  color: rgba(255, 255, 255, 0.75);
-  text-transform: uppercase;
-}
+/* ── Tombol PESAN SEKARANG ───────────────────────────────── */
 
-/* Tombol PESAN SEKARANG */
 .orderBtn {
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #0A0808;
-  background-color: #F3F4F6;
+  color: #000000;
+  background-color: #FFFFFF;
   border: none;
-  border-radius: 4px;
+  border-radius: 0;
   padding: 0.65rem 1.15rem;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color 0.2s ease, transform 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .orderBtn:hover {
-  background-color: #f0ebe4;
-  transform: translateY(-1px);
+  background-color: #000000;
+  color: #FFFFFF;
+  outline: 1px solid #FFFFFF;
 }
 
 .orderBtn:active {
-  transform: translateY(0);
-  background-color: #e0dbd4;
+  opacity: 0.8;
 }
 
 /* ── Tombol Lihat Semua Menu ─────────────────────────────── */
@@ -217,72 +178,45 @@
   margin-top: 3.5rem;
 }
 
-/*
-  "Lihat Semua Menu" — tombol bergaya dark editorial
-  Reset browser defaults dulu (background, border bawaan <button>),
-  lalu terapkan gaya kustom: border tipis putih, teks abu-abu.
-*/
 .viewAllBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
-
-  /* Reset default <button> agar tidak jadi kotak putih */
   appearance: none;
   background: transparent;
-
-  /* Border tipis putih yang sedikit terlihat */
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 100px;
+  border: 1px solid #FFFFFF;
+  border-radius: 0;
   padding: 1rem 2.5rem;
-
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  letter-spacing: 0.25em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
+  color: #FFFFFF;
   cursor: pointer;
-
-  transition: color 0.25s ease, border-color 0.25s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .viewAllBtn:hover {
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.5);
+  background-color: #FFFFFF;
+  color: #000000;
 }
 
 .btnArrow {
   font-size: 1rem;
   line-height: 1;
-  transition: transform 0.2s ease;
 }
 
-.viewAllBtn:hover .btnArrow {
-  transform: translate(2px, -2px);
-}
+/* ── Modal Overlay ───────────────────────────────────────── */
 
-/* ── Modal Overlay (latar belakang gelap fullscreen) ─── */
-/*
-  position: fixed → elemen "mengambang" di atas semua konten,
-  tidak terpengaruh scroll halaman.
-  inset: 0 → shorthand untuk top/right/bottom/left semua = 0
-  z-index: 1000 → memastikan modal selalu di atas elemen lain
-*/
 .modalOverlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-
-  /* Pusatkan modalBox secara horizontal dan vertikal */
+  background-color: rgba(0, 0, 0, 0.92);
   display: flex;
   align-items: center;
   justify-content: center;
-
-  /* Animasi muncul dengan CSS transition */
   animation: fadeIn 0.2s ease;
 }
 
@@ -291,11 +225,12 @@
   to   { opacity: 1; }
 }
 
-/* ── Kotak konten modal ──────────────────────────────── */
+/* ── Kotak konten modal ──────────────────────────────────── */
+
 .modalBox {
-  background-color: #0a0808;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background-color: #000000;
+  border: 1px solid #333333;
+  border-radius: 0;
   padding: 3.5rem;
   max-width: 480px;
   width: 90%;
@@ -304,76 +239,66 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-
-  /* Scale-in saat muncul */
   animation: scaleIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.94); }
+  from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* Label kecil di atas judul */
 .modalEyebrow {
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  letter-spacing: 0.3em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
+  color: #FFFFFF;
 }
 
-/* Judul "Coming Soon" — gunakan Cormorant Garamond agar mewah */
 .modalTitle {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(2.2rem, 6vw, 3.2rem);
-  font-weight: 500;
-  color: #F3F4F6;
-  letter-spacing: 0.04em;
-  line-height: 1.1;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
 }
 
-/* Sub-teks deskripsi */
 .modalText {
   font-family: 'Inter', sans-serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 400;
-  line-height: 1.75;
-  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.7;
+  color: #D1D5DB;
   max-width: 320px;
 }
 
-/* Garis dekorasi tipis */
 .modalDivider {
   width: 40px;
   height: 1px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #333333;
   margin: 0.5rem 0;
 }
 
-/* Tombol "KEMBALI" di dalam modal */
 .modalCloseBtn {
   appearance: none;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 100px;
+  border: 1px solid #FFFFFF;
+  border-radius: 0;
   padding: 0.75rem 2rem;
   cursor: pointer;
-
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  letter-spacing: 0.22em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
-
+  color: #FFFFFF;
   margin-top: 0.5rem;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .modalCloseBtn:hover {
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.4);
+  background-color: #FFFFFF;
+  color: #000000;
 }
-
