@@ -112,7 +112,12 @@ const IntroSection = () => {
   const dividerAnim = makeLineAnim(4); // Garis pembatas — muncul terakhir
 
   return (
-    <section ref={sectionRef} className={styles.section} id="story">
+    <section 
+      ref={sectionRef} 
+      className={styles.section} 
+      id="story"
+      style={{ position: 'relative', minHeight: '100vh', width: '100%', backgroundColor: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5rem 2rem' }}
+    >
 
       {/* ── Data koordinat di pojok-pojok (hanya dekorasi visual) ── */}
       <div className={`${styles.meta} ${styles.metaTL}`}>
