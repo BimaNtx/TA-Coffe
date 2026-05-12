@@ -17,7 +17,7 @@ const FullCatalogView = ({ products, onSelectProduct, onBack, orderItems, setOrd
   <div
     style={{
       minHeight: '100vh',
-      backgroundColor: '#000',
+      backgroundColor: '#18181B',
       paddingTop: '5rem',
     }}
   >
@@ -29,12 +29,12 @@ const FullCatalogView = ({ products, onSelectProduct, onBack, orderItems, setOrd
           display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
           background: 'none', border: '1px solid rgba(255,255,255,0.15)',
           borderRadius: '6px', padding: '0.5rem 1.1rem',
-          fontFamily: 'Inter, sans-serif', fontSize: '0.72rem',
-          letterSpacing: '0.1em', color: 'rgba(255,255,255,0.6)',
+          fontFamily: 'Inter, sans-serif', fontSize: '0.9rem',
+          letterSpacing: '0.1em', color: 'rgba(255,255,255,0.75)',
           cursor: 'pointer', transition: 'color 0.2s, border-color 0.2s',
         }}
-        onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+        onMouseEnter={e => { e.currentTarget.style.color = '#F3F4F6'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
       >
         ← Kembali ke Beranda
       </button>
@@ -44,8 +44,8 @@ const FullCatalogView = ({ products, onSelectProduct, onBack, orderItems, setOrd
     <div style={{ textAlign: 'center', padding: '2rem 2rem 0' }}>
       <span style={{
         display: 'block', fontFamily: 'Inter, sans-serif',
-        fontSize: '0.65rem', letterSpacing: '0.2em',
-        color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase',
+        fontSize: '0.9rem', letterSpacing: '0.2em',
+        color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase',
         marginBottom: '0.75rem',
       }}>
         Full Collection
@@ -53,13 +53,13 @@ const FullCatalogView = ({ products, onSelectProduct, onBack, orderItems, setOrd
       <h1 style={{
         fontFamily: 'Cormorant Garamond, Georgia, serif',
         fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 700,
-        color: '#fff', margin: '0 0 0.5rem',
+        color: '#F3F4F6', margin: '0 0 0.5rem',
       }}>
         Semua Menu Kami
       </h1>
       <p style={{
-        fontFamily: 'Inter, sans-serif', fontSize: '0.85rem',
-        color: 'rgba(255,255,255,0.4)', margin: 0,
+        fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', fontWeight: 400,
+        color: 'rgba(255,255,255,0.75)', margin: 0,
       }}>
         {products.length} produk tersedia
       </p>
