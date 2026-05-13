@@ -23,7 +23,7 @@ import styles from './ProductCatalog.module.css';
 const formatHarga = (num) => 'Rp ' + Number(num).toLocaleString('id-ID');
 
 // ─────────────────────────────────────────────────────────────
-// KOMPONEN: ProductCard — satu kartu per produk
+// KOMPONEN: ProductRow — satu baris per produk (gaya editorial list)
 // ─────────────────────────────────────────────────────────────
 const ProductCard = ({ product, index, onSelect }) => {
   const tersedia = product.is_available !== false; // default anggap tersedia
@@ -38,48 +38,42 @@ const ProductCard = ({ product, index, onSelect }) => {
 
   return (
     <motion.article
-      className={styles.productCard}
-      initial={{ opacity: 0, y: 40 }}
+      className={styles.productRow}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.6, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.55, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className={styles.cardImage}>
+      {/* Kiri: Gambar */}
+      <div className={styles.rowImage}>
         <img
           src={product.image_url || '/bag1.png'}
           alt={`Foto ${product.name}`}
           className={styles.productImg}
           loading="lazy"
         />
-        {/* Badge "Habis" jika stok tidak tersedia */}
+      </div>
+
+      {/* Tengah: Nama produk */}
+      <div className={styles.rowInfo}>
+        <h3 className={styles.productName}>{product.name}</h3>
         {!tersedia && (
-          <span style={{
-            position: 'absolute', top: '0.75rem', right: '0.75rem',
-            background: '#000000', color: '#FFFFFF',
-            fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.12em',
-            padding: '0.25rem 0.6rem', border: '1px solid #FFFFFF',
-          }}>HABIS</span>
+          <span className={styles.habisTag}>HABIS</span>
         )}
       </div>
 
-      <div className={styles.cardBody}>
-        <h3 className={styles.productName}>{product.name}</h3>
-
-        <div className={styles.cardFooter}>
-          <div className={styles.priceBlock}>
-            {/* product.price dari Supabase adalah angka, diformat ke Rupiah */}
-            <span className={styles.price}>{formatHarga(product.price)}</span>
-          </div>
-          <button
-            className={styles.orderBtn}
-            onClick={handleOrder}
-            disabled={!tersedia}
-            aria-label={tersedia ? `Pesan ${product.name}` : `${product.name} sedang habis`}
-            style={{ opacity: tersedia ? 1 : 0.45, cursor: tersedia ? 'pointer' : 'not-allowed' }}
-          >
-            {tersedia ? 'Pesan Sekarang' : 'Habis'}
-          </button>
-        </div>
+      {/* Kanan: Harga + Tombol */}
+      <div className={styles.rowAction}>
+        <span className={styles.price}>{formatHarga(product.price)}</span>
+        <button
+          className={styles.orderBtn}
+          onClick={handleOrder}
+          disabled={!tersedia}
+          aria-label={tersedia ? `Pesan ${product.name}` : `${product.name} sedang habis`}
+          style={{ opacity: tersedia ? 1 : 0.45, cursor: tersedia ? 'pointer' : 'not-allowed' }}
+        >
+          {tersedia ? 'Pesan Sekarang' : 'Habis'}
+        </button>
       </div>
     </motion.article>
   );
@@ -115,12 +109,12 @@ const ProductCatalog = ({ products = [], onSelectProduct, onViewAll, hideViewAll
       </motion.div>
 
       {/*
-        ── Grid Produk ──────────────────────────────────────
-        .map() menghasilkan satu <ProductCard> per produk.
+        ── List Produk ───────────────────────────────────────
+        .map() menghasilkan satu <ProductRow> per produk.
         `key={product.id}` wajib ada agar React bisa melacak
         perubahan list dengan efisien.
       */}
-      <div className={styles.catalogGrid}>
+      <div className={styles.catalogList}>
         {products.map((product, index) => (
           <ProductCard
             key={product.id}

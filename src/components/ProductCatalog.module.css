@@ -49,90 +49,76 @@
   line-height: 1.7;
 }
 
-/* ── Grid 3 kolom ────────────────────────────────────────── */
+/* ── List produk (editorial rows) ───────────────────── */
 
-.catalogGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;                    /* Gap 1px → garis grid terlihat dari background */
+.catalogList {
   max-width: 1280px;
   margin: 0 auto;
-  background-color: #333333;  /* Warna "garis" grid */
-  border: 1px solid #333333;
+  border-top: 1px solid #333333; /* Garis paling atas */
 }
 
-@media (max-width: 900px) {
-  .catalogGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+/* ── Satu baris produk ─────────────────────────────── */
 
-@media (max-width: 560px) {
-  .catalogGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Kartu produk ────────────────────────────────────────── */
-
-.productCard {
+.productRow {
   display: flex;
-  flex-direction: column;
-  background-color: #000000;
-  cursor: default;
+  align-items: center;
+  gap: 3rem;
+  padding: 2.5rem 0;
+  border-bottom: 1px solid #333333;
 }
 
-/* Area foto */
-.cardImage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  background-color: #111111;
+/* Kiri: Wadah gambar — ukuran tetap agar baris rapi */
+.rowImage {
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
 }
 
 .productImg {
-  width: 55%;
-  max-width: 160px;
-  height: auto;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
-/* Area teks */
-.cardBody {
+/* Tengah: Nama + badge habis — flex: 1 agar mengisi ruang sisa */
+.rowInfo {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  padding: 1.5rem;
-  flex: 1;
+  gap: 0.5rem;
 }
 
 .productName {
   font-family: 'Inter', sans-serif;
-  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
   font-weight: 700;
   color: #FFFFFF;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
-/* Footer kartu: harga + tombol */
-.cardFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: auto;
-  padding-top: 1.2rem;
-  border-top: 1px solid #333333;
+.habisTag {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  padding: 0.2rem 0.5rem;
+  width: fit-content;
 }
 
-.priceBlock {
+/* Kanan: Harga + tombol — rata kanan */
+.rowAction {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  align-items: flex-end;
+  gap: 0.75rem;
 }
 
 .price {
@@ -140,6 +126,23 @@
   font-size: 1.1rem;
   font-weight: 500;
   color: #FFFFFF;
+  white-space: nowrap;
+}
+
+/* ── Mobile: tumpuk vertikal ──────────────────────────── */
+
+@media (max-width: 600px) {
+  .productRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 2rem 0;
+  }
+
+  .rowAction {
+    align-items: flex-start;
+    width: 100%;
+  }
 }
 
 /* ── Tombol PESAN SEKARANG ───────────────────────────────── */
