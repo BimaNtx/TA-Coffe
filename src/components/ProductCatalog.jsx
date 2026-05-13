@@ -70,9 +70,9 @@ const ProductCard = ({ product, index, onSelect }) => {
           onClick={handleOrder}
           disabled={!tersedia}
           aria-label={tersedia ? `Pesan ${product.name}` : `${product.name} sedang habis`}
-          style={{ opacity: tersedia ? 1 : 0.45, cursor: tersedia ? 'pointer' : 'not-allowed' }}
+          style={{ opacity: tersedia ? 1 : 0.35, cursor: tersedia ? 'pointer' : 'not-allowed' }}
         >
-          {tersedia ? 'Pesan Sekarang' : 'Habis'}
+          {tersedia ? 'Pesan' : 'Habis'}
         </button>
       </div>
     </motion.article>

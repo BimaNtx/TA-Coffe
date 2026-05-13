@@ -54,7 +54,7 @@
 .catalogList {
   max-width: 1280px;
   margin: 0 auto;
-  border-top: 1px solid #333333; /* Garis paling atas */
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* ── Satu baris produk ─────────────────────────────── */
@@ -63,8 +63,9 @@
   display: flex;
   align-items: center;
   gap: 3rem;
-  padding: 2.5rem 0;
-  border-bottom: 1px solid #333333;
+  padding: 4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  transition: border-color 0.2s ease;
 }
 
 /* Kiri: Wadah gambar — ukuran tetap agar baris rapi */
@@ -81,6 +82,13 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+  mix-blend-mode: lighten;
+  filter: grayscale(100%) contrast(1.2);
+  transition: filter 0.4s ease;
+}
+
+.productRow:hover .productImg {
+  filter: grayscale(60%) contrast(1.2);
 }
 
 /* Tengah: Nama + badge habis — flex: 1 agar mengisi ruang sisa */
@@ -93,10 +101,11 @@
 
 .productName {
   font-family: 'Inter', sans-serif;
-  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
-  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 400;
   color: #FFFFFF;
-  line-height: 1.15;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
 }
 
 .habisTag {
@@ -136,7 +145,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 1.25rem;
-    padding: 2rem 0;
+    padding: 2.5rem 0;
   }
 
   .rowAction {
@@ -145,32 +154,46 @@
   }
 }
 
-/* ── Tombol PESAN SEKARANG ───────────────────────────────── */
+/* ── Tombol PESAN — Gaya Text Link Minimalis ──────────────── */
 
 .orderBtn {
   font-family: 'Inter', sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #000000;
-  background-color: #FFFFFF;
+  color: rgba(255, 255, 255, 0.65);
+  background: transparent;
   border: none;
-  border-radius: 0;
-  padding: 0.65rem 1.15rem;
+  border-bottom: 1px solid transparent;
+  padding: 0;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.orderBtn::after {
+  content: '↗';
+  font-size: 0.9rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+  display: inline-block;
 }
 
 .orderBtn:hover {
-  background-color: #000000;
   color: #FFFFFF;
-  outline: 1px solid #FFFFFF;
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.orderBtn:hover::after {
+  transform: translate(2px, -2px);
 }
 
 .orderBtn:active {
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 /* ── Tombol Lihat Semua Menu ─────────────────────────────── */
