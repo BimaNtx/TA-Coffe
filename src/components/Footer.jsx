@@ -1,156 +1,101 @@
 /**
- * Footer.jsx
- *
- * Komponen penutup landing page BIMA COFFEE.
+ * Footer.jsx — Edge-to-Edge Brutalist Anchor
  *
  * Struktur:
- *   1. Top Row  — 3 kolom: identitas, navigasi, sosial media
- *   2. Divider  — garis tipis
- *   3. Copyright — metadata kecil
- *   4. Big Brand — teks "BIMA COFFEE" besar di bawah
+ *   1. topRow    — Info kiri, Links besar di kanan
+ *   2. copyright — strip tipis dengan admin console tersembunyi
+ *   3. stamp     — "BIMA COFFEE" 16vw, terpotong di dasar layar
  */
 
 import styles from './Footer.module.css';
 
-// ─────────────────────────────────────────────────────────────
-// DATA NAVIGASI & SOSIAL
-// Dipisah sebagai konstanta agar mudah diubah
-// ─────────────────────────────────────────────────────────────
-const NAV_LINKS = [
-  { label: 'Shop',    href: '#order'   }, // Memanggil Form Pemesanan
-  { label: 'Story',   href: '#story'   }, // Menuju bagian Intro
-  { label: 'Contact', href: '#contact' }, // Menuju Footer ini sendiri
-];
-
-const SOCIAL_LINKS = [
-  { label: 'Instagram', href: 'https://instagram.com' },
-  {
-    label: 'WhatsApp',
-    // Menggunakan API resmi wa.me agar otomatis membuka aplikasi WhatsApp
-    // Format: wa.me/kodenegaranomor (62 untuk Indonesia, tanpa angka 0 di awal)
-    href: 'https://wa.me/6281234567890'
-  },
-];
-
-// ─────────────────────────────────────────────────────────────
-// HELPER: scroll ke atas halaman
-//
-// Cara kerja window.scrollTo:
-//   top: 0             -> menggulir dokumen kembali ke titik 0px (paling atas)
-//   behavior: 'smooth' -> menciptakan efek guliran animasi yang mulus
-// Fungsi bawaan browser ini sangat praktis, tidak butuh library eksternal.
-// ─────────────────────────────────────────────────────────────
 const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-// ─────────────────────────────────────────────────────────────
-// KOMPONEN UTAMA
-// ─────────────────────────────────────────────────────────────
 /**
- * @prop {function} navigateTo — fungsi berpindah halaman dari App.jsx
- *   Digunakan untuk link tersembunyi "Admin Console" di bagian bawah.
+ * @prop {function} navigateTo — fungsi dari App.jsx untuk ke halaman auth/admin
  */
 const Footer = ({ navigateTo }) => (
   <footer id="contact" className={styles.footer}>
 
-    {/* ── Top Row: 3-column grid ──────────────────────────── */}
+    {/* ── Top Row ──────────────────────────────────────────── */}
     <div className={styles.topRow}>
 
-      {/* Kolom 1: Identitas brand */}
-      <div className={styles.identityCol}>
-        <p className={styles.brandSmall}>BIMA COFFEE</p>
-        <p className={styles.tagline}>
-          Crafted with passion in<br />Lumajang, East Java.
+      {/* Kiri: Brand & Info */}
+      <div className={styles.infoCol}>
+        <p className={styles.brandName}>Bima Coffee</p>
+        <p className={styles.infoText}>
+          Single-origin specialty coffee<br />
+          roasted in Lumajang, East Java.<br />
+          8.1333° S, 113.2167° E
         </p>
-        <p className={styles.coords}>8.1333° S, 113.2167° E</p>
       </div>
 
-      {/* Kolom 2: Navigasi halaman */}
-      <nav className={styles.navCol} aria-label="Footer navigation">
-        <p className={styles.colHeading}>Navigate</p>
-        <ul className={styles.linkList}>
-          {NAV_LINKS.map(link => (
-            <li key={link.label}>
-              <a href={link.href} className={styles.link}>
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {/* Kanan: Link Groups */}
+      <div className={styles.linksRow}>
 
-      {/* Kolom 3: Sosial media + tombol back to top */}
-      <div className={styles.socialCol}>
-        <p className={styles.colHeading}>Connect</p>
-        <ul className={styles.linkList}>
-          {SOCIAL_LINKS.map(link => (
-            <li key={link.label}>
-              <a
-                href={link.href}
-                className={styles.link}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {link.label} ↗
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className={styles.linkGroup}>
+          <p className={styles.groupHeading}>Menu</p>
+          <a href="#catalog"        className={styles.link}>Our Beans</a>
+          <a href="#section-pesan"  className={styles.link}>Order</a>
+          <a href="#story"          className={styles.link}>Story</a>
+        </div>
 
-        {/* Tombol kembali ke atas */}
-        <button
-          onClick={scrollToTop}
-          className={styles.backToTop}
-          aria-label="Kembali ke atas"
-        >
-          ↑ Back to Top
-        </button>
+        <div className={styles.linkGroup}>
+          <p className={styles.groupHeading}>Connect</p>
+          <a
+            href="https://instagram.com"
+            className={styles.link}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Instagram ↗
+          </a>
+          <a
+            href="https://wa.me/6281234567890"
+            className={styles.link}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            WhatsApp ↗
+          </a>
+          <button
+            onClick={scrollToTop}
+            className={styles.link}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}
+          >
+            Back to Top ↑
+          </button>
+        </div>
+
       </div>
-
     </div>
 
-    {/* ── Divider ─────────────────────────────────────────── */}
-    <hr className={styles.divider} />
-
-    {/* ── Copyright bar ───────────────────────────────────── */}
+    {/* ── Copyright Strip ───────────────────────────────────── */}
+    {/*
+      Admin Console disembunyikan di sini agar tidak mencolok.
+      navigateTo('auth') akan membawa ke halaman login admin.
+    */}
     <div className={styles.copyright}>
-      <span>© 2026 Bima Ananta</span>
-      <span>Built with React</span>
-      {/*
-        Link tersembunyi ke Admin Console.
-        Terlihat seperti teks copyright biasa agar tidak mencolok.
-        Menggunakan navigateTo('auth') dari App.jsx untuk berpindah
-        ke halaman login sebelum masuk ke dashboard admin.
-      */}
+      <span>© 2026 Bima Coffee</span>
       <button
         onClick={() => navigateTo('auth')}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-          fontSize: 'inherit',
-          color: 'rgba(255,255,255,0.12)',
-          letterSpacing: '0.08em',
-          padding: 0,
-          transition: 'color 0.3s',
-        }}
-        onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.4)'}
-        onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.12)'}
+        className={styles.adminBtn}
         title="Admin Area"
       >
         Admin Console
       </button>
+      <span>Lumajang, East Java</span>
     </div>
 
-    {/* ── Architectural Brand Name (bottom) ───────────────── */}
+    {/* ── Giant Stamp ───────────────────────────────────────── */}
     {/*
-      Dibuat sangat besar (12vw+) dan tipis agar terasa
-      seperti brand fashion high-end. Teks ini sengaja
-      sedikit terpotong di bawah (overflow hidden pada .footer).
+      font-size: 16vw — otomatis selebar layar tanpa media query.
+      margin-bottom negatif memotong bagian bawah huruf,
+      efek stamp editorial yang agresif dan membekas.
     */}
-    <div className={styles.bigBrandWrap} aria-hidden="true">
-      <p className={styles.bigBrand}>Bima Coffee</p>
-    </div>
+    <p className={styles.stamp} aria-hidden="true">
+      Bima Coffee
+    </p>
 
   </footer>
 );
