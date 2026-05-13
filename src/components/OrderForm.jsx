@@ -349,6 +349,20 @@ const OrderForm = ({ products = [], globalSettings = {}, orderItems, setOrderIte
               </li>
             ))}
           </ul>
+
+          {/* ── Editorial Image Insert ───────────────────── */}
+          <div className={styles.imageWrap}>
+            <img
+              src="/barista-editorial.png"
+              alt="Barista menuang kopi pour-over Bima Coffee"
+              className={styles.editorialImg}
+              loading="lazy"
+            />
+          </div>
+          <p className={styles.editorialCaption}>
+            Roasted in Lumajang, East Java<br />
+            Small Batch — Crafted with Precision
+          </p>
         </motion.div>
 
         {/* ── Kanan: form ────────────────────────────────── */}
@@ -430,13 +444,13 @@ const OrderForm = ({ products = [], globalSettings = {}, orderItems, setOrderIte
                         type="button"
                         onClick={() => { setOrderType(type); setTableNumber(''); }}
                         style={{
-                          flex: 1, padding: '0.6rem', borderRadius: '4px',
+                          flex: 1, padding: '0.75rem', borderRadius: '0',
                           fontFamily: 'Inter, sans-serif', fontSize: '0.7rem',
-                          fontWeight: 500, letterSpacing: '0.1em', cursor: 'pointer',
+                          fontWeight: 600, letterSpacing: '0.12em', cursor: 'pointer',
                           transition: 'all 0.2s',
-                          background:   orderType === type ? '#ffffff' : 'transparent',
-                          color:        orderType === type ? '#000000' : 'rgba(255,255,255,0.4)',
-                          border: `1px solid ${orderType === type ? '#ffffff' : 'rgba(255,255,255,0.15)'}`,
+                          background:   orderType === type ? '#FFFFFF' : 'rgba(255,255,255,0.05)',
+                          color:        orderType === type ? '#000000' : 'rgba(255,255,255,0.45)',
+                          border: `1px solid ${orderType === type ? '#FFFFFF' : 'rgba(255,255,255,0.15)'}`,
                         }}
                       >
                         {type === 'DINE_IN' ? '🪑 Dine In' : '🥡 Takeaway'}
