@@ -1,57 +1,38 @@
-/* ════════════════════════════════════════════════════════════
-   Hero.module.css — Editorial 12-Column Grid
-   Referensi: tillerdigital.com, atomic.black
-   ════════════════════════════════════════════════════════════ */
+/* Hero.module.css */
 
-/* ── Section wrapper ─────────────────────────────────────── */
-
+/* --- CONTAINER UTAMA --- */
+/* min-height: 100vh memastikan section ini mengambil tinggi layar secara penuh (satu halaman).
+   display: flex digunakan untuk memudahkan penataan elemen di dalamnya.
+   position: relative penting di sini agar elemen absolut di dalamnya tidak keluar dari batas hero. */
 .hero {
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background-color: #000000;
+  background: #000000;
   display: flex;
   flex-direction: column;
-  /* Padding atas = tinggi navbar (80px) + ruang napas */
-  padding: 7rem 0 0;
+  padding: 7rem 6% 0;
   overflow: hidden;
 }
 
-/* ── 12-column grid ──────────────────────────────────────── */
-/*
-  Trik editorial: grid sengaja tidak simetris.
-  Teks menempati ~60% lebar, gambar ~65% dari kanan,
-  sehingga ada area overlap ±25% di tengah layar.
-*/
-
 .grid {
-  position: relative;
   flex: 1;
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  column-gap: 0;
+  display: flex;
   align-items: center;
-  padding: 0 6%;
-  min-height: calc(100vh - 7rem - 72px); /* 72px = tinggi bottom bar */
+  position: relative;
+  padding-bottom: 72px;
 }
 
-/* ── Blok teks — kolom 1 sampai 8 ───────────────────────── */
-
 .textBlock {
-  grid-column: 1 / 9;      /* menempati 8 dari 12 kolom */
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   position: relative;
-  z-index: 3;              /* di atas gambar */
+  z-index: 2;
+  max-width: 60%;
 }
 
-/* Label atas kecil */
-.eyebrowRow {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
+.eyebrowRow { display: flex; align-items: center; gap: 1rem; }
 
 .eyebrow {
   font-family: 'Inter', sans-serif;
@@ -62,113 +43,99 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-.eyebrowDivider {
-  display: inline-block;
-  width: 24px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.25);
-  flex-shrink: 0;
-}
+.eyebrowDivider { display: inline-block; width: 24px; height: 1px; background: rgba(255,255,255,0.25); }
 
-/* Stack teks raksasa */
-.titleStack {
-  display: flex;
-  flex-direction: column;
-  /* Tidak ada gap — lineHeight yang mengatur jarak */
-}
+.titleStack { display: flex; flex-direction: column; }
 
-.wordBima {
-  font-family: 'Inter', sans-serif;
-  font-size: clamp(5.5rem, 16vw, 15rem);
-  font-weight: 900;
-  line-height: 0.88;
-  letter-spacing: -0.035em;
-  color: #FFFFFF;
-  margin: 0;
-  /* Rata kiri — default */
-}
-
+/* --- TIPOGRAFI (BIMA COFFEE) --- */
+/* clamp() adalah trik jitu bikin font responsif tanpa media query!
+   Formatnya: clamp(minimum, ideal, maksimum). Jadi ukurannya otomatis menyesuaikan lebar layar.
+   fontWeight: 900 ngasih kesan tebal yang maksimal dan solid. */
+.wordBima,
 .wordCoffee {
   font-family: 'Inter', sans-serif;
-  font-size: clamp(5.5rem, 16vw, 15rem);
+  font-size: clamp(5rem, 15vw, 14rem);
   font-weight: 900;
   line-height: 0.88;
   letter-spacing: -0.035em;
   color: #FFFFFF;
   margin: 0;
-  /* Asimetris: COFFEE sedikit menjorok ke kanan */
-  padding-left: clamp(2rem, 6vw, 8rem);
 }
 
-/* Tagline di bawah judul */
+.wordCoffee { padding-left: clamp(1.5rem, 5vw, 7rem); }
+
 .tagline {
   font-family: 'Inter', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 400;
+  font-size: 0.75rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.35);
   margin: 0;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  max-width: 400px;
 }
 
-/* ── Blok gambar — kolom 6 sampai 13 (overflow ke kanan) ── */
-
+/* --- IMAGE CONTAINER --- */
+/* position: absolute dipake biar gambar bisa bebas ditumpuk secara artistik
+   (tumpang tindih) dengan teks, jadi desainnya gak kaku. */
 .imageBlock {
-  grid-column: 6 / 13;    /* mulai kolom 6, menembus batas kanan */
+  position: absolute;
+  right: -6%;
+  top: 0;
+  height: 100%;
+  width: 55%;
+  z-index: 1;
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- OVERLAY GRADIENT --- */
+/* Ini "rahasia" desainer! linear-gradient dipakai untuk memudarkan tepi gambar
+   agar menyatu mulus (blending) dengan background hitam pekat di sekitarnya. */
+.imageOverlay {
   position: absolute;
   top: 0;
-  right: -2%;             /* sedikit menembus batas section */
+  left: 0;
+  width: 100%;
   height: 100%;
-  width: 58%;
-  z-index: 2;             /* di atas background, di bawah teks */
-
-  /* Fade ke hitam di tepi kiri & bawah agar menyatu */
-  mask-image:
-    linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,1) 70%),
-    linear-gradient(to top,   rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%);
-  -webkit-mask-image:
-    linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,1) 70%),
-    linear-gradient(to top,   rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%);
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
+  z-index: 1;
+  background: linear-gradient(
+    to right,
+    #000000 0%,
+    rgba(0, 0, 0, 0) 30%,
+    rgba(0, 0, 0, 0) 70%,
+    #000000 100%
+  );
 }
 
 .heroImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
-  display: block;
-  /* Sedikit redupkan agar teks putih tetap terbaca */
-  filter: brightness(0.7) contrast(1.1);
+  position: relative;
+  z-index: 0;
+  filter: brightness(0.65) contrast(1.1);
 }
-
-/* ── Bottom metadata bar ─────────────────────────────────── */
-/*
-  Garis tipis di atas, lalu dua kolom: info kiri, CTA kanan.
-*/
 
 .bottomBar {
   height: 72px;
-  padding: 0 6%;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: relative;
   z-index: 10;
-  flex-shrink: 0;
 }
 
-.metaGroup {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-}
+.metaGroup { display: flex; align-items: center; gap: 1.25rem; }
 
+/* --- METADATA (TEKS KECIL) --- */
+/* letter-spacing nambahin jarak antar huruf. Untuk teks kecil,
+   trik ini ngasih kesan premium, mahal, dan clean. */
 .metaLabel {
   font-family: 'Inter', sans-serif;
   font-size: 0.7rem;
@@ -179,22 +146,9 @@
   white-space: nowrap;
 }
 
-.metaSep {
-  display: inline-block;
-  width: 1px;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
-}
+.metaSep { display: inline-block; width: 1px; height: 10px; background: rgba(255,255,255,0.2); }
 
-/* CTA scroll */
-.scrollCta {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: rgba(255, 255, 255, 0.45);
-  cursor: default;
-}
+.scrollCta { display: flex; align-items: center; gap: 0.6rem; color: rgba(255,255,255,0.45); }
 
 .ctaText {
   font-family: 'Inter', sans-serif;
@@ -204,72 +158,9 @@
   text-transform: uppercase;
 }
 
-.ctaArrow {
-  flex-shrink: 0;
-}
-
-/* ── Responsif Tablet ────────────────────────────────────── */
-
-@media (max-width: 900px) {
-  .grid {
-    padding: 0 5%;
-  }
-
-  .textBlock {
-    grid-column: 1 / 10;
-  }
-
-  .imageBlock {
-    width: 50%;
-    opacity: 0.6; /* lebih redup agar teks tetap dominan */
-  }
-
-  .metaGroup {
-    gap: 0.75rem;
-  }
-}
-
-/* ── Responsif Mobile ────────────────────────────────────── */
-
 @media (max-width: 640px) {
-  .hero {
-    padding: 6rem 0 0;
-  }
-
-  .grid {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0 5%;
-    gap: 0;
-  }
-
-  .textBlock {
-    width: 100%;
-    z-index: 3;
-  }
-
-  /* Gambar jadi background subtle di mobile */
-  .imageBlock {
-    position: fixed; /* tidak — gunakan absolute */
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0.15;
-    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 80%);
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 80%);
-    mask-composite: unset;
-    -webkit-mask-composite: unset;
-  }
-
-  .wordCoffee {
-    padding-left: 0;
-  }
-
-  /* Sembunyikan metadata di layar sangat kecil */
-  .metaGroup {
-    display: none;
-  }
+  .textBlock { max-width: 100%; }
+  .imageBlock { opacity: 0.12; right: 0; width: 100%; }
+  .wordCoffee { padding-left: 0; }
+  .metaGroup { display: none; }
 }

@@ -40,13 +40,16 @@ const Hero = () => {
           </p>
         </div>
 
-        {/* ── Blok gambar (kolom 6–12, overlap ke teks) ────────── */}
+        {/* ── Blok gambar — gradient overlay agar menyatu ke hitam ── */}
         <div className={styles.imageBlock}>
-          <img
-            src="/hero-beans.png"
-            alt="Dark-roasted coffee beans macro — Bima Coffee"
-            className={styles.heroImage}
-          />
+          <div className={styles.imageContainer}>
+            <div className={styles.imageOverlay} />
+            <img
+              src="/hero-beans.png"
+              alt="Dark-roasted coffee beans macro — Bima Coffee"
+              className={styles.heroImage}
+            />
+          </div>
         </div>
 
       </div>
