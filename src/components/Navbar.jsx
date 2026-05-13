@@ -4,7 +4,8 @@
  * Komponen navigasi yang selalu tampil di bagian atas layar (position: fixed).
  *
  * Fitur utama:
- *   - Efek "glassmorphism" — navbar menjadi buram/transparan saat user scroll ke bawah
+ *   - Efek background hitam solid saat user scroll ke bawah
+ *   - Smart hide-on-scroll: sembunyi saat scroll turun, muncul saat scroll naik
  *   - Animasi berbasis scroll menggunakan useTransform Framer Motion
  *
  * Props yang diterima dari App.jsx:
@@ -13,10 +14,34 @@
  *   @prop {number}             animEnd       — titik scroll (px) dimana animasi selesai
  */
 
-import { useTransform, motion } from 'framer-motion';
+import { useState } from 'react';
+import { useTransform, useScroll as usePageScroll, useMotionValueEvent, motion } from 'framer-motion';
 import styles from './Navbar.module.css';
 
 const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
+
+  // ─────────────────────────────────────────────────────────────
+  // SMART HIDE-ON-SCROLL
+  // ─────────────────────────────────────────────────────────────
+
+  const [isHidden, setIsHidden] = useState(false);
+
+  /**
+   * usePageScroll() membuat scrollY lokal untuk deteksi ARAH scroll.
+   * Berbeda dari prop `scrollY` (dari App.jsx) yang dipakai untuk
+   * animasi glass/logo — keduanya bisa hidup berdampingan.
+   */
+  const { scrollY: pageScrollY } = usePageScroll();
+
+  useMotionValueEvent(pageScrollY, 'change', (latest) => {
+    const previous = pageScrollY.getPrevious() ?? 0;
+    // Sembunyikan saat scroll KE BAWAH dan sudah melewati 150px
+    if (latest > previous && latest > 150) {
+      setIsHidden(true);
+    } else {
+      setIsHidden(false);
+    }
+  });
 
   /**
    * glassFactor — angka antara 0 dan 1 yang mengontrol intensitas efek glass
@@ -80,11 +105,17 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
      */
     <motion.nav
       className={styles.navbar}
+      variants={{
+        visible: { y: 0 },
+        hidden:  { y: '-100%' },
+      }}
+      animate={isHidden ? 'hidden' : 'visible'}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
       style={{
         height: navbarHeight,
         backgroundColor: bgColor,
         backdropFilter: blur,
-        WebkitBackdropFilter: blur,     // prefix untuk Safari
+        WebkitBackdropFilter: blur,
         borderBottomColor: borderAlpha,
       }}
     >
@@ -96,13 +127,18 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
           <a href="#catalog" className={styles.link}>Menu</a>
         </div>
 
-        {/*
-          Kolom tengah yang kosong — ini adalah "tempat duduk" logo.
-          Logo BIMA COFFEE dirender di App.jsx dengan position:fixed,
-          dan secara visual akan "mendarat" tepat di tengah celah ini.
-          aria-hidden="true" menyembunyikannya dari screen reader.
-        */}
-        <div className={styles.logoGap} aria-hidden="true" />
+        {/* Logo teks di tengah navbar */}
+        <span style={{
+          fontFamily: "'Inter', sans-serif",
+          fontWeight: '800',
+          fontSize: '1rem',
+          letterSpacing: '0.08em',
+          color: '#FFFFFF',
+          textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+        }}>
+          Bima Coffee
+        </span>
 
         {/* Link kanan */}
         <div className={`${styles.navLinks} ${styles.navLinksRight}`}>

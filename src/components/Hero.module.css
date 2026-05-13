@@ -16,11 +16,23 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(10, 8, 8, 0.4) 0%,
-    rgba(10, 8, 8, 0.7) 60%,
-    var(--bg-dark) 100%
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.75) 60%,
+    #000000 100%
   );
   z-index: 1;
+}
+
+/* ── Judul raksasa di tengah Hero ───────── */
+
+.heroTitle {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none; /* agar tidak menghalangi klik elemen di bawahnya */
 }
 
 /* ── Scroll indicator ───────────────────── */

@@ -3,13 +3,9 @@
  *
  * Section 1 — Halaman pembuka (Landing Screen)
  *
- * Catatan desain:
- *   Logo "BIMA COFFEE" TIDAK dirender di sini.
- *   Logo dirender di App.jsx agar bisa bergerak bebas antara
- *   Hero (tengah layar) dan Navbar (atas layar) dengan satu animasi.
- *
  * Yang dirender di Hero:
- *   - Overlay gelap di atas background
+ *   - Judul raksasa "BIMA COFFEE" statis di tengah layar
+ *   - Overlay gelap di atas background foto
  *   - Indikator scroll (animasi bouncing "Explore ↓")
  */
 
@@ -23,6 +19,32 @@ const Hero = () => {
 
       {/* Overlay hitam semi-transparan di atas background foto */}
       <div className={styles.overlay} />
+
+      {/* Judul raksasa statis — ikut scroll secara natural */}
+      <div className={styles.heroTitle}>
+        <span style={{
+          fontFamily: "'Inter', sans-serif",
+          fontSize: 'clamp(5rem, 15vw, 12rem)',
+          fontWeight: '900',
+          lineHeight: '0.85',
+          letterSpacing: '-0.02em',
+          color: '#FFFFFF',
+          display: 'block',
+        }}>
+          BIMA
+        </span>
+        <span style={{
+          fontFamily: "'Inter', sans-serif",
+          fontSize: 'clamp(5rem, 15vw, 12rem)',
+          fontWeight: '900',
+          lineHeight: '0.85',
+          letterSpacing: '-0.02em',
+          color: '#FFFFFF',
+          display: 'block',
+        }}>
+          COFFEE
+        </span>
+      </div>
 
       {/*
         INDIKATOR SCROLL — memberi tahu user untuk scroll ke bawah
