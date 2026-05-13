@@ -1,13 +1,11 @@
 /**
- * Hero.jsx
+ * Hero.jsx — Editorial Grid Layout
  *
- * Section 1 — Editorial Hero "Bima Coffee"
- *
- * Desain terinspirasi atomic.black & trucknroll.com:
- *   - Layout asimetris: "BIMA" kiri atas, "COFFEE" kanan bawah
- *   - Gambar biji kopi besar bertumpuk dengan teks (z-index overlap)
- *   - Metadata tipografi kecil di pojok dan garis pemisah tipis
- *   - CTA "SCROLL TO DISCOVER" minimalis di pojok kiri bawah
+ * Terinspirasi: tillerdigital.com, atomic.black
+ * Layout: 12-column grid asimetris
+ *   - Kolom 1-7 : teks raksasa BIMA / COFFEE
+ *   - Kolom 6-12: gambar sinematik biji kopi (overlap ke kolom teks)
+ *   - Metadata bar di bawah bergaya "data sheet"
  */
 
 import { motion } from 'framer-motion';
@@ -17,64 +15,66 @@ const Hero = () => {
   return (
     <section className={styles.hero}>
 
-      {/* ── Metadata pojok kiri atas ─────────────────────────── */}
-      <div className={styles.metaTopLeft}>
-        <span className={styles.metaLabel}>Premium Roastery</span>
-        <span className={styles.metaDivider} />
-        <span className={styles.metaLabel}>Est. 2024</span>
-      </div>
+      {/* ── Grid utama 12 kolom ───────────────────────────────── */}
+      <div className={styles.grid}>
 
-      {/* ── Metadata pojok kanan atas ────────────────────────── */}
-      <div className={styles.metaTopRight}>
-        <span className={styles.metaLabel}>Lumajang, Indonesia</span>
-        <span className={styles.metaDivider} />
-        <span className={styles.metaLabel}>Single Origin</span>
-      </div>
+        {/* ── Blok teks (kolom 1–7) ───────────────────────────── */}
+        <div className={styles.textBlock}>
 
-      {/* ── Area tipografi utama (asimetris) ─────────────────── */}
-      <div className={styles.titleArea}>
+          {/* Label atas — "PREMIUM ROASTERY" */}
+          <div className={styles.eyebrowRow}>
+            <span className={styles.eyebrow}>Premium Roastery</span>
+            <span className={styles.eyebrowDivider} />
+            <span className={styles.eyebrow}>Est. 2024</span>
+          </div>
 
-        {/* "BIMA" — kiri atas, z-index rendah agar gambar overlap */}
-        <h1 className={styles.wordBima}>BIMA</h1>
+          {/* Teks raksasa: BIMA kiri, COFFEE kanan */}
+          <div className={styles.titleStack}>
+            <h1 className={styles.wordBima}>BIMA</h1>
+            <p  className={styles.wordCoffee}>COFFEE</p>
+          </div>
 
-        {/*
-          Gambar biji kopi — posisi absolut di tengah, z-index di antara
-          dua kata sehingga "COFFEE" seolah di atas gambar.
-        */}
-        <div className={styles.imageWrap}>
+          {/* Tagline bawah teks */}
+          <p className={styles.tagline}>
+            Single origin · Arabica · Highlands of Lumajang
+          </p>
+        </div>
+
+        {/* ── Blok gambar (kolom 6–12, overlap ke teks) ────────── */}
+        <div className={styles.imageBlock}>
           <img
-            src="/bean.png"
-            alt="Biji kopi pilihan Bima Coffee"
+            src="/hero-beans.png"
+            alt="Dark-roasted coffee beans macro — Bima Coffee"
             className={styles.heroImage}
           />
         </div>
 
-        {/* "COFFEE" — kanan bawah, z-index lebih tinggi dari gambar */}
-        <p className={styles.wordCoffee}>COFFEE</p>
-
       </div>
 
-      {/* ── Garis horizontal + CTA di pojok bawah kiri ──────── */}
+      {/* ── Bottom metadata bar ───────────────────────────────── */}
       <div className={styles.bottomBar}>
-        <div className={styles.bottomLeft}>
-          <motion.div
-            className={styles.scrollCta}
-            animate={{ y: [0, 8, 0] }}
-            transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-          >
-            <span className={styles.ctaText}>Scroll to Discover</span>
-            {/* Panah tipis SVG — lebih editorial dari ikon library */}
-            <svg width="16" height="24" viewBox="0 0 16 24" fill="none" className={styles.ctaArrow}>
-              <line x1="8" y1="0" x2="8" y2="20" stroke="#FFFFFF" strokeWidth="1"/>
-              <polyline points="3,15 8,21 13,15" fill="none" stroke="#FFFFFF" strokeWidth="1"/>
-            </svg>
-          </motion.div>
+
+        <div className={styles.metaGroup}>
+          <span className={styles.metaLabel}>Lumajang, Indonesia</span>
+          <span className={styles.metaSep} />
+          <span className={styles.metaLabel}>1200 m asl</span>
+          <span className={styles.metaSep} />
+          <span className={styles.metaLabel}>Full Washed</span>
         </div>
 
-        {/* Nomor seri editorial di pojok kanan bawah */}
-        <div className={styles.bottomRight}>
-          <span className={styles.metaLabel}>BC — 001</span>
-        </div>
+        {/* CTA scroll — pojok kanan bawah */}
+        <motion.div
+          className={styles.scrollCta}
+          animate={{ y: [0, 7, 0] }}
+          transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+        >
+          <span className={styles.ctaText}>Scroll to Discover</span>
+          <svg width="14" height="22" viewBox="0 0 14 22" fill="none" className={styles.ctaArrow}>
+            <line x1="7" y1="0" x2="7" y2="18" stroke="currentColor" strokeWidth="1"/>
+            <polyline points="2,13 7,19 12,13" fill="none" stroke="currentColor" strokeWidth="1"/>
+          </svg>
+        </motion.div>
+
       </div>
 
     </section>
