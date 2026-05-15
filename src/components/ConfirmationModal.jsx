@@ -1,41 +1,120 @@
 import React from 'react';
 
 // ─────────────────────────────────────────────────────────────
-// Shared style constants (diperlukan oleh tombol di dalam modal)
-// ─────────────────────────────────────────────────────────────
-const btnPrimaryStyle   = { flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
-const btnSecondaryStyle = { flex: 1, background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
-
-// ─────────────────────────────────────────────────────────────
-// MODAL: KONFIRMASI HAPUS
+// MODAL: KONFIRMASI HAPUS — Brutalist System Alert
 // Props: isOpen, title, message, onConfirm, onClose
 // ─────────────────────────────────────────────────────────────
 const ConfirmationModal = ({ isOpen, title, message, onConfirm, onClose }) => {
   if (!isOpen) return null;
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 2000,
-      background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)',
+      background: 'rgba(0,0,0,0.92)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      animation: 'fadeIn 0.2s ease',
+      padding: '1rem',
+      animation: 'fadeIn 0.15s ease',
     }}>
       <div style={{
-        background: '#0a0808', border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '10px', padding: '2rem', width: '100%', maxWidth: '360px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.6)', textAlign: 'center',
+        background: '#000000',
+        border: '1px solid rgba(255,255,255,0.2)',
+        borderRadius: '0',
+        padding: '2.5rem',
+        width: '100%',
+        maxWidth: '380px',
       }}>
-        <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>⚠️</div>
-        <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.4rem', color: '#fff', marginBottom: '0.6rem' }}>
+
+        {/* ── Warning tag — brutalist badge ── */}
+        <span style={{
+          display: 'inline-block',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '0.6rem',
+          fontWeight: 700,
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color: '#000000',
+          background: 'rgba(255,80,80,0.9)',
+          padding: '0.2rem 0.5rem',
+          marginBottom: '1.25rem',
+        }}>
+          WARNING
+        </span>
+
+        {/* ── Title — Inter 800 uppercase ── */}
+        <h3 style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '1.4rem',
+          fontWeight: 800,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: '#ffffff',
+          margin: '0 0 0.75rem 0',
+          lineHeight: 1.1,
+        }}>
           {title}
         </h3>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+
+        {/* ── Message ── */}
+        <p style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '0.8rem',
+          fontWeight: 400,
+          color: 'rgba(255,255,255,0.5)',
+          lineHeight: 1.65,
+          margin: '0 0 2rem 0',
+        }}>
           {message}
         </p>
+
+        {/* Thin divider */}
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', marginBottom: '1.5rem' }} />
+
+        {/* ── Action buttons ── */}
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={onClose} style={btnSecondaryStyle}>Batal</button>
+          {/* Cancel */}
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              color: 'rgba(255,255,255,0.55)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '0',
+              padding: '0.75rem',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.7rem',
+              fontWeight: 600,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              transition: 'color 0.15s ease, border-color 0.15s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
+          >
+            Batal
+          </button>
+
+          {/* Confirm / Destructive */}
           <button
             onClick={onConfirm}
-            style={{ ...btnPrimaryStyle, background: '#c0392b', color: '#fff', border: 'none' }}
+            style={{
+              flex: 1,
+              background: 'rgba(200,30,30,0.9)',
+              color: '#ffffff',
+              border: '1px solid rgba(255,80,80,0.4)',
+              borderRadius: '0',
+              padding: '0.75rem',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              transition: 'background-color 0.15s ease',
+            }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(220,40,40,1)'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(200,30,30,0.9)'}
           >
             Ya, Hapus
           </button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from './AdminDashboard.module.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -44,10 +44,6 @@ const OrderList = ({ orders, isLoading, onRefresh, onUpdateStatus, onPrintOrder,
    */
   const [statusFilter, setStatusFilter] = useState('Semua');
 
-  // ── State Paginasi ─────────────────────────────────────────
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
   // ─────────────────────────────────────────────────────────
   // FILTER DERIVATIF — dijalankan setiap render, tanpa useMemo
   // karena filternya cepat dan orders biasanya < 1000 baris.
@@ -66,15 +62,6 @@ const OrderList = ({ orders, isLoading, onRefresh, onUpdateStatus, onPrintOrder,
 
     return true;
   });
-
-  // Reset ke halaman 1 setiap kali filter berubah
-  // agar user tidak tersangkut di halaman yang sekarang kosong.
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
-
-  const totalPages    = Math.ceil(filteredOrders.length / itemsPerPage);
-  const currentOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // ─────────────────────────────────────────────────────────
   // RENDER
@@ -174,102 +161,100 @@ const OrderList = ({ orders, isLoading, onRefresh, onUpdateStatus, onPrintOrder,
         </div>
       ) : (
         <>
-          <div className={styles.tableContainer}>
-            <table className={styles.ordersTable}>
-              <thead>
-                <tr>
-                  <th>Tanggal</th><th>Pelanggan</th>
-                  <th>Kontak &amp; Alamat</th><th>Pesanan (Kopi)</th>
-                  <th>Tipe &amp; Meja</th>
-                  {/* Kolom finansial: disembunyikan untuk Barista */}
-                  {userRole !== 'barista' && <th>Bayar</th>}
-                  {userRole !== 'barista' && <th>Total</th>}
-                  <th>Status</th><th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentOrders.map(order => (
-                  <tr key={order.id}>
-                    <td className={styles.tdDate}>{formatDate(order.created_at)}</td>
-                    <td className={styles.tdName}>{order.nama ?? '—'}</td>
-                    <td className={styles.tdContact}>
-                      <div className={styles.tdContactInner}>
-                        <span className={styles.contactWa}>{order.nomor_wa}</span>
-                        <span className={styles.contactAddress}>{order.alamat}</span>
-                      </div>
-                    </td>
-                    <td className={styles.tdItems}>
-                      <div className={styles.tdItemsInner}>
-                        {Array.isArray(order.detail_pesanan)
-                          ? order.detail_pesanan.map((item, i) => (
-                              <span key={i} className={styles.itemChip}>
-                                {item.quantity}× {item.productId?.replace(/-/g, ' ')}
-                              </span>
-                            ))
-                          : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>
-                        }
-                      </div>
-                    </td>
-                    <td className={styles.tdPrice}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                        <span>{order.tipe_pesanan ?? '—'}</span>
-                        {order.nomor_meja && (
-                          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Meja {order.nomor_meja}</span>
-                        )}
-                      </div>
-                    </td>
-                    {/* Metode Bayar: disembunyikan untuk Barista */}
-                    {userRole !== 'barista' && (
-                      <td className={styles.tdPrice}>{order.metode_bayar ?? '—'}</td>
-                    )}
-                    {/* Total Harga: disembunyikan untuk Barista */}
-                    {userRole !== 'barista' && (
-                      <td className={styles.tdPrice}>{formatCurrency(order.total_harga)}</td>
-                    )}
-                    <td>
-                      <span className={`${styles.statusBadge} ${
-                        order.status === 'Pending'  ? styles.badgePending    :
-                        order.status === 'Diproses' ? styles.badgeProcessing :
-                        styles.badgeDone
-                      }`}>{order.status}</span>
-                    </td>
-                    <td className={styles.tdAction}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                        {/* Ubah Status */}
+        {/* Scrollable wrapper — seluruh data tampil, tabel bisa di-scroll dalam kontainernya */}
+        <div style={{ maxHeight: '65vh', overflowY: 'auto', paddingRight: '6px' }}>
+          <table className={styles.ordersTable}>
+            <thead>
+              <tr style={{
+                position: 'sticky', top: 0,
+                backgroundColor: '#0b0b0b',
+                zIndex: 10,
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+              }}>
+                <th>Tanggal</th><th>Pelanggan</th>
+                <th>Kontak &amp; Alamat</th><th>Pesanan (Kopi)</th>
+                <th>Tipe &amp; Meja</th>
+                {/* Kolom finansial: disembunyikan untuk Barista */}
+                {userRole !== 'barista' && <th>Bayar</th>}
+                {userRole !== 'barista' && <th>Total</th>}
+                <th>Status</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredOrders.map(order => (
+                <tr key={order.id}>
+                  <td className={styles.tdDate}>{formatDate(order.created_at)}</td>
+                  <td className={styles.tdName}>{order.nama ?? '—'}</td>
+                  <td className={styles.tdContact}>
+                    <div className={styles.tdContactInner}>
+                      <span className={styles.contactWa}>{order.nomor_wa}</span>
+                      <span className={styles.contactAddress}>{order.alamat}</span>
+                    </div>
+                  </td>
+                  <td className={styles.tdItems}>
+                    <div className={styles.tdItemsInner}>
+                      {Array.isArray(order.detail_pesanan)
+                        ? order.detail_pesanan.map((item, i) => (
+                            <span key={i} className={styles.itemChip}>
+                              {item.quantity}× {item.productId?.replace(/-/g, ' ')}
+                            </span>
+                          ))
+                        : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>
+                      }
+                    </div>
+                  </td>
+                  <td className={styles.tdPrice}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                      <span>{order.tipe_pesanan ?? '—'}</span>
+                      {order.nomor_meja && (
+                        <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Meja {order.nomor_meja}</span>
+                      )}
+                    </div>
+                  </td>
+                  {/* Metode Bayar: disembunyikan untuk Barista */}
+                  {userRole !== 'barista' && (
+                    <td className={styles.tdPrice}>{order.metode_bayar ?? '—'}</td>
+                  )}
+                  {/* Total Harga: disembunyikan untuk Barista */}
+                  {userRole !== 'barista' && (
+                    <td className={styles.tdPrice}>{formatCurrency(order.total_harga)}</td>
+                  )}
+                  <td>
+                    <span className={`${styles.statusBadge} ${
+                      order.status === 'Pending'  ? styles.badgePending    :
+                      order.status === 'Diproses' ? styles.badgeProcessing :
+                      styles.badgeDone
+                    }`}>{order.status}</span>
+                  </td>
+                  <td className={styles.tdAction}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      {/* Ubah Status */}
+                      <button
+                        className={styles.actionBtn}
+                        onClick={() => onUpdateStatus(order.id, order.status)}
+                        disabled={order.status === 'Selesai'}
+                      >
+                        {order.status === 'Selesai'  ? 'Selesai ✓' :
+                         order.status === 'Diproses' ? '→ Selesai'  :
+                         '→ Diproses'}
+                      </button>
+                      {/* Cetak Struk: hanya untuk Owner & Kasir, bukan Barista */}
+                      {userRole !== 'barista' && (
                         <button
                           className={styles.actionBtn}
-                          onClick={() => onUpdateStatus(order.id, order.status)}
-                          disabled={order.status === 'Selesai'}
+                          style={{ borderColor: 'rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.7)' }}
+                          onClick={() => onPrintOrder(order)}
                         >
-                          {order.status === 'Selesai'  ? 'Selesai ✓' :
-                           order.status === 'Diproses' ? '→ Selesai'  :
-                           '→ Diproses'}
+                          🖨 Struk
                         </button>
-                        {/* Cetak Struk: hanya untuk Owner & Kasir, bukan Barista */}
-                        {userRole !== 'barista' && (
-                          <button
-                            className={styles.actionBtn}
-                            style={{ borderColor: 'rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.7)' }}
-                            onClick={() => onPrintOrder(order)}
-                          >
-                            🖨 Struk
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className={styles.pagination}>
-              <button className={styles.pageBtn} onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>← Prev</button>
-              <span className={styles.pageInfo}>Halaman <strong>{currentPage}</strong> dari <strong>{totalPages}</strong></span>
-              <button className={styles.pageBtn} onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Next →</button>
-            </div>
-          )}
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         </>
       )}
     </div>

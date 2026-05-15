@@ -14,10 +14,10 @@ const formatCurrency = (amount) =>
 // ─────────────────────────────────────────────────────────────
 // SHARED STYLES (lokal — dipakai oleh form & settings)
 // ─────────────────────────────────────────────────────────────
-const labelStyle       = { display: 'block', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.4)', marginBottom: '0.4rem' };
-const inputStyle       = { width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.6rem 0.8rem', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', boxSizing: 'border-box' };
-const btnPrimaryStyle  = { flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
-const btnSecondaryStyle = { flex: 1, background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '0.65rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', letterSpacing: '0.12em', cursor: 'pointer' };
+const labelStyle        = { display: 'block', fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: '0.5rem' };
+const inputStyle        = { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '0', padding: '0.7rem 0.9rem', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s ease' };
+const btnPrimaryStyle   = { flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '0', padding: '0.75rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' };
+const btnSecondaryStyle = { flex: 1, background: 'transparent', color: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '0', padding: '0.75rem', fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' };
 
 // ─────────────────────────────────────────────────────────────
 // MODAL FORM: Tambah / Edit Produk
@@ -52,28 +52,90 @@ const ProductFormModal = ({ initial, onSave, onClose }) => {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
-      background: 'rgba(0,0,0,0.85)',
+      background: 'rgba(0,0,0,0.92)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '1rem',
     }}>
       <div style={{
-        background: '#0a0808', border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '8px', padding: '2rem', width: '100%', maxWidth: '380px',
+        background: '#000000',
+        border: '1px solid rgba(255,255,255,0.2)',
+        borderRadius: '0',
+        padding: '2.5rem',
+        width: '100%',
+        maxWidth: '400px',
       }}>
-        <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', color: '#fff', marginBottom: '1.5rem' }}>
+        {/* ── Eyebrow / kategori ── */}
+        <span style={{
+          display: 'block',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '0.6rem',
+          fontWeight: 700,
+          letterSpacing: '0.25em',
+          textTransform: 'uppercase',
+          color: 'rgba(255,255,255,0.3)',
+          marginBottom: '0.75rem',
+        }}>Admin Console · Menu</span>
+
+        {/* ── Judul modal — Inter 800 uppercase ── */}
+        <h3 style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '1.6rem',
+          fontWeight: 800,
+          letterSpacing: '0.05em',
+          textTransform: 'uppercase',
+          color: '#ffffff',
+          margin: '0 0 0.5rem 0',
+          lineHeight: 1,
+        }}>
           {initial ? 'Edit Produk' : 'Tambah Produk'}
         </h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+        {/* Thin divider */}
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1.25rem 0 1.75rem' }} />
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
             <label style={labelStyle}>Nama Produk</label>
-            <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} placeholder="Contoh: Semeru Espresso" />
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              style={inputStyle}
+              placeholder="Contoh: Semeru Espresso"
+              onFocus={e  => e.target.style.borderColor = '#ffffff'}
+              onBlur={e   => e.target.style.borderColor = 'rgba(255,255,255,0.15)'}
+            />
           </div>
           <div>
             <label style={labelStyle}>Harga (Rp)</label>
-            <input type="number" step="1000" value={price} onChange={e => setPrice(e.target.value)} style={inputStyle} placeholder="Contoh: 85000" />
+            <input
+              type="number"
+              step="1000"
+              value={price}
+              onChange={e => setPrice(e.target.value)}
+              style={inputStyle}
+              placeholder="Contoh: 85000"
+              onFocus={e  => e.target.style.borderColor = '#ffffff'}
+              onBlur={e   => e.target.style.borderColor = 'rgba(255,255,255,0.15)'}
+            />
           </div>
-          {error && <p style={{ color: '#ff6b6b', fontSize: '0.75rem' }}>⚠ {error}</p>}
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-            <button type="submit" disabled={isSaving} style={btnPrimaryStyle}>
+
+          {error && (
+            <p style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.7rem',
+              color: 'rgba(255,80,80,0.9)',
+              margin: 0,
+              paddingLeft: '0.75rem',
+              borderLeft: '2px solid rgba(255,80,80,0.6)',
+            }}>⚠ {error}</p>
+          )}
+
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+            <button
+              type="submit"
+              disabled={isSaving}
+              style={{ ...btnPrimaryStyle, opacity: isSaving ? 0.55 : 1 }}
+            >
               {isSaving ? 'Menyimpan...' : 'Simpan'}
             </button>
             <button type="button" onClick={onClose} style={btnSecondaryStyle}>Batal</button>
@@ -252,10 +314,16 @@ const ProductManager = ({ products, globalSettings = {}, onProductsChange, onSet
           {products.length === 0 ? (
             <div className={styles.emptyState}><p className={styles.emptyText}>Belum ada produk. Klik "Tambah Produk".</p></div>
           ) : (
-            <div className={styles.tableContainer}>
+            /* Scrollable wrapper — semua produk tampil sekaligus */
+            <div style={{ maxHeight: '65vh', overflowY: 'auto', paddingRight: '6px' }}>
               <table className={styles.ordersTable}>
                 <thead>
-                  <tr>
+                  <tr style={{
+                    position: 'sticky', top: 0,
+                    backgroundColor: '#0b0b0b',
+                    zIndex: 10,
+                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                  }}>
                     <th>Nama Produk</th>
                     <th>Harga</th>
                     <th>Stok / Status</th>
