@@ -2,6 +2,7 @@
  * AuthPage.jsx
  *
  * Halaman Login Admin — Bima Coffee
+ * Visual: "Brutalist Security Gate" — tajam, minimalis, tipografi agresif.
  *
  * Konsep React & Keamanan untuk Laporan RPL:
  *   1. async/await   — menunggu respons API Supabase tanpa membekukan UI
@@ -94,24 +95,38 @@ const AuthPage = ({ navigateTo }) => {
   // ─────────────────────────────────────────────────────────────
   return (
     <section className={styles.authContainer}>
-      {/* Efek dekorasi cahaya tipis di background */}
-      <div className={styles.ambientLight}></div>
 
-      {/* Card login dengan animasi masuk dari bawah */}
-      <motion.div
-        className={styles.authCard}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      {/* ── Back-to-home — fixed top-left text link, like FullCatalogView ── */}
+      <button
+        type="button"
+        className={styles.backLink}
+        onClick={() => navigateTo('landing')}
+        aria-label="Kembali ke beranda"
       >
-        {/* Header */}
+        ← Return to Roastery
+      </button>
+
+      {/* ── Form: free-floating, no card wrapper ── */}
+      <motion.div
+        className={styles.authForm}
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {/* ── Header ── */}
         <div className={styles.cardHeader}>
-          <h1 className={styles.brandTitle}>Bima Coffee</h1>
-          <p className={styles.subtitle}>Masuk ke panel admin</p>
+          <span className={styles.eyebrow}>Bima Coffee · Admin Portal</span>
+          <h1 className={styles.brandTitle}>
+            System<br />Access
+          </h1>
+          <p className={styles.subtitle}>Authorized Personnel Only</p>
         </div>
 
-        {/* Form Login */}
-        <form className={styles.formGroup} onSubmit={handleAuth}>
+        {/* Thin divider between header and form */}
+        <div className={styles.divider} />
+
+        {/* ── Login Form ── */}
+        <form className={styles.formGroup} onSubmit={handleAuth} noValidate>
 
           <div className={styles.inputWrap}>
             <label htmlFor="email" className={styles.label}>Email</label>
@@ -126,6 +141,7 @@ const AuthPage = ({ navigateTo }) => {
               className={styles.inputField}
               placeholder="admin@email.com"
               required
+              autoComplete="email"
             />
           </div>
 
@@ -142,6 +158,7 @@ const AuthPage = ({ navigateTo }) => {
               className={styles.inputField}
               placeholder="••••••••"
               required
+              autoComplete="current-password"
             />
           </div>
 
@@ -151,14 +168,7 @@ const AuthPage = ({ navigateTo }) => {
             ⚠ sebagai penanda visual agar mudah diperhatikan.
           */}
           {errorMessage && (
-            <p style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize:   '0.75rem',
-              color:      '#ff6b6b',
-              margin:     '0 0 0.75rem 0',
-              letterSpacing: '0.02em',
-              lineHeight: '1.5',
-            }}>
+            <p className={styles.errorMsg}>
               ⚠ {errorMessage}
             </p>
           )}
@@ -172,25 +182,17 @@ const AuthPage = ({ navigateTo }) => {
             type="submit"
             className={styles.submitBtn}
             disabled={isSubmitting}
-            style={{
-              opacity: isSubmitting ? 0.6 : 1,
-              cursor:  isSubmitting ? 'not-allowed' : 'pointer',
-            }}
           >
-            {isSubmitting ? 'MEMPROSES...' : 'MASUK'}
+            {isSubmitting ? 'PROCESSING...' : 'AUTHENTICATE'}
           </button>
         </form>
 
-        {/* Tombol kembali ke halaman utama */}
-        <div className={styles.toggleWrap}>
-          <button
-            type="button"
-            className={styles.toggleBtn}
-            style={{ marginTop: '0.75rem', display: 'block', width: '100%', opacity: 0.5 }}
-            onClick={() => navigateTo('landing')}
-          >
-            ← Kembali ke Beranda
-          </button>
+        {/* ── Bottom status indicator ── */}
+        <div className={styles.statusLine}>
+          <span className={styles.statusDot} />
+          <span className={styles.statusText}>
+            {isSubmitting ? 'Verifying credentials...' : 'Secure connection established'}
+          </span>
         </div>
       </motion.div>
     </section>

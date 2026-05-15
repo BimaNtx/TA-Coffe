@@ -15,6 +15,7 @@
  *   @prop {object}   globalSettings  — pengaturan pajak
  */
 
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import OrderForm  from './OrderForm';
 
@@ -256,58 +257,68 @@ const ProductCell = ({ product, index, onSelect }) => {
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA
 // ─────────────────────────────────────────────────────────────
-const FullCatalogView = ({ products, onSelectProduct, onBack, orderItems, setOrderItems, globalSettings }) => (
-  <div style={S.page}>
-    <div style={S.inner}>
+const FullCatalogView = ({ products, onSelectProduct, onBack, orderItems, setOrderItems, globalSettings }) => {
+  
+  // Hook Sakti: Memaksa scroll ke paling atas setiap halaman ini dibuka
+  useEffect(() => {
+    // Gunakan setTimeout untuk menunggu DOM selesai di-paint sepenuhnya
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }, 50); // Jeda 50ms sudah cukup untuk mengatasi race condition browser
 
-      {/* ── Navigasi Kembali — text link ─────────────────── */}
-      <button
-        onClick={onBack}
-        style={S.backBtn}
-        onMouseEnter={e => { e.currentTarget.style.color = '#FFFFFF'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
-        aria-label="Kembali ke beranda"
-      >
-        ← Return to Roastery
-      </button>
+    // Cleanup function
+    return () => clearTimeout(timer);
+  }, []);
 
-      {/* ── Header Raksasa ───────────────────────────────── */}
-      <header style={S.header}>
-        <span style={S.eyebrow}>Single Origin Collection</span>
-        <h1 style={S.title}>
-          The<br />Collection
-        </h1>
-        <span style={S.count}>{products.length} Lots Available · Lumajang, East Java</span>
-      </header>
+  return (
+    <div style={S.page}>
+      <div style={S.inner}>
 
-    </div>
+        {/* ── Navigasi Kembali — text link ─────────────────── */}
+        <button
+          onClick={onBack}
+          style={S.backBtn}
+          onMouseEnter={e => { e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+          aria-label="Kembali ke beranda"
+        >
+          ← Return to Roastery
+        </button>
 
-    {/* ── Architectural Inventory Grid ─────────────────── */}
-    {/*
-      Grid tanpa gap — border kanan & bawah tiap sel membentuk
-      tabel arsitektur ala editorial design. flush ke pinggir.
-    */}
-    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 5%' }}>
-      <div style={S.grid}>
-        {products.map((product, index) => (
-          <ProductCell
-            key={product.id}
-            product={product}
-            index={index}
-            onSelect={onSelectProduct}
-          />
-        ))}
+        {/* ── Header Raksasa ───────────────────────────────── */}
+        <header style={S.header}>
+          <span style={S.eyebrow}>Single Origin Collection</span>
+          <h1 style={S.title}>
+            The<br />Collection
+          </h1>
+          <span style={S.count}>{products.length} Lots Available · Lumajang, East Java</span>
+        </header>
+
       </div>
-    </div>
 
-    {/* ── Form Pemesanan ───────────────────────────────── */}
-    <OrderForm
-      products={products}
-      globalSettings={globalSettings}
-      orderItems={orderItems}
-      setOrderItems={setOrderItems}
-    />
-  </div>
-);
+      {/* ── Architectural Inventory Grid ─────────────────── */}
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 5%' }}>
+        <div style={S.grid}>
+          {products.map((product, index) => (
+            <ProductCell
+              key={product.id}
+              product={product}
+              index={index}
+              onSelect={onSelectProduct}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ── Form Pemesanan ───────────────────────────────── */}
+      <OrderForm
+        products={products}
+        globalSettings={globalSettings}
+        orderItems={orderItems}
+        setOrderItems={setOrderItems}
+      />
+    </div>
+  );
+};
 
 export default FullCatalogView;

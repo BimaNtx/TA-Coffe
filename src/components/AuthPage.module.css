@@ -1,8 +1,9 @@
 /* ═══════════════════════════════════════════════════════════
    AuthPage.module.css
-   Style untuk halaman Autentikasi berdesain premium & dark mode.
+   Brutalist Security Gate — no card, no border-radius, no mercy.
    ═══════════════════════════════════════════════════════════ */
 
+/* ── Root container: pure black void ── */
 .authContainer {
   position: relative;
   min-height: 100vh;
@@ -10,67 +11,117 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #050404; /* Latar yang sangat gelap */
+  background-color: #000000;
   overflow: hidden;
-  padding: 1.5rem;
 }
 
-/* Dekorasi pencahayaan halus di belakang form */
-.ambientLight {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 60vw;
-  height: 60vh;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0) 70%);
-  z-index: 0;
+/* ── Subtle scan-line texture overlay ── */
+.authContainer::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.012) 2px,
+    rgba(255, 255, 255, 0.012) 4px
+  );
   pointer-events: none;
+  z-index: 0;
 }
 
-/* Kotak Formulir / Card */
-.authCard {
+/* ── Back-to-home link — fixed top-left, just like FullCatalogView ── */
+.backLink {
+  position: fixed;
+  top: 2rem;
+  left: 2rem;
+  z-index: 10;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  background: none;
+  border: none;
+  padding: 0;
+
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: #ffffff;
+}
+
+/* ── Form wrapper: free-floating, no card ── */
+.authForm {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 420px;
-  background-color: rgba(15, 13, 13, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 3rem 2.5rem;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  max-width: 480px;
+  padding: 0 2rem;
 }
 
+/* ── Header block ── */
 .cardHeader {
-  text-align: center;
+  margin-bottom: 3rem;
+}
+
+/* Eyebrow / classification tag above the title */
+.eyebrow {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+  margin-bottom: 1rem;
+}
+
+/* Main system title — aggressive & massive */
+.brandTitle {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+}
+
+/* Sub-line classification */
+.subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0;
+}
+
+/* Thin horizontal rule dividing header from form */
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
   margin-bottom: 2.5rem;
 }
 
-.brandTitle {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2.5rem;
-  font-weight: 500;
-  color: #ffffff;
-  margin: 0;
-  letter-spacing: 0.05em;
-  line-height: 1;
-}
-
-.subtitle {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 0.8rem;
-  letter-spacing: 0.02em;
-}
-
-/* ── Bagian Area Input ── */
+/* ── Form fields ── */
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .inputWrap {
@@ -79,90 +130,114 @@
   gap: 0.5rem;
 }
 
+/* Label — uppercase, spaced, dim */
 .label {
   font-family: 'Inter', sans-serif;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.05em;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
 }
 
+/* Input — brutal, zero radius */
 .inputField {
   width: 100%;
-  padding: 0.85rem 1rem;
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  padding: 0.9rem 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0;
   color: #ffffff;
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
-  transition: border-color 0.3s ease, background-color 0.3s ease;
+  font-weight: 400;
+  letter-spacing: 0.02em;
   outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  box-sizing: border-box;
 }
 
 .inputField::placeholder {
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.15);
 }
 
 .inputField:focus {
-  border-color: rgba(255, 255, 255, 0.7);
-  background-color: rgba(255, 255, 255, 0.03);
+  border-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.07);
 }
 
-/* ── Tombol Utama ── */
+/* ── Error message ── */
+.errorMsg {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: rgba(255, 80, 80, 0.9);
+  margin: 0;
+  padding: 0.6rem 0;
+  border-left: 2px solid rgba(255, 80, 80, 0.6);
+  padding-left: 0.75rem;
+}
+
+/* ── Submit button — full white, zero radius ── */
 .submitBtn {
   width: 100%;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   padding: 1rem;
   background-color: #ffffff;
   color: #000000;
   border: none;
-  border-radius: 4px;
+  border-radius: 0;
   font-family: 'Inter', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
-.submitBtn:hover {
-  background-color: #e5e5e5;
+.submitBtn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.88);
 }
 
-.submitBtn:active {
-  transform: scale(0.98);
+.submitBtn:active:not(:disabled) {
+  transform: scaleY(0.97);
 }
 
-/* ── Bagian Bawah Toggle (Pintasan ke Mode lain) ── */
-.toggleWrap {
-  text-align: center;
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Bottom status line ── */
+.statusLine {
   margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.toggleText {
+.statusDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.statusText {
   font-family: 'Inter', sans-serif;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.2);
 }
 
-.toggleBtn {
-  background: none;
-  border: none;
-  padding: 0;
-  font-family: inherit;
-  font-size: inherit;
-  color: #ffffff;
-  font-weight: 500;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-color: rgba(255, 255, 255, 0.3);
-  transition: color 0.2s ease, text-decoration-color 0.2s ease;
-}
-
-.toggleBtn:hover {
-  color: #aaaaaa;
-  text-decoration-color: #aaaaaa;
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1; }
 }
