@@ -7,6 +7,7 @@
  *   - Efek background hitam solid saat user scroll ke bawah
  *   - Smart hide-on-scroll: sembunyi saat scroll turun, muncul saat scroll naik
  *   - Animasi berbasis scroll menggunakan useTransform Framer Motion
+ *   - Fullscreen Brutalist Overlay Menu untuk tampilan mobile
  *
  * Props yang diterima dari App.jsx:
  *   @prop {MotionValue<number>} scrollY      — nilai posisi scroll saat ini (dalam px)
@@ -15,7 +16,7 @@
  */
 
 import { useState } from 'react';
-import { useTransform, useScroll as usePageScroll, useMotionValueEvent, motion } from 'framer-motion';
+import { useTransform, useScroll as usePageScroll, useMotionValueEvent, motion, AnimatePresence } from 'framer-motion';
 import styles from './Navbar.module.css';
 
 const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
@@ -25,6 +26,11 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
   // ─────────────────────────────────────────────────────────────
 
   const [isHidden, setIsHidden] = useState(false);
+
+  // ─────────────────────────────────────────────────────────────
+  // MOBILE MENU STATE
+  // ─────────────────────────────────────────────────────────────
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   /**
    * usePageScroll() membuat scrollY lokal untuk deteksi ARAH scroll.
@@ -45,25 +51,11 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
 
   /**
    * glassFactor — angka antara 0 dan 1 yang mengontrol intensitas efek glass
-   *
-   * useTransform bekerja seperti "pemetaan nilai":
-   *   - Saat scrollY = animEnd * 0.5 (setengah jalan) → glassFactor = 0 (transparan)
-   *   - Saat scrollY = animEnd (penuh)                 → glassFactor = 1 (buram)
-   *
-   * Mengapa kita mulai dari setengah (animEnd * 0.5)?
-   * Agar glass effect muncul sedikit lebih lambat dari animasi logo,
-   * menciptakan urutan visual yang lebih menarik.
    */
   const glassFactor = useTransform(scrollY, [animEnd * 0.5, animEnd], [0, 1]);
 
   /**
    * bgColor — warna latar navbar, berubah dari transparan ke semi-hitam
-   *
-   * useTransform di sini menerima fungsi (bukan array angka) karena kita
-   * perlu membangun string CSS secara dinamis: `rgba(10, 8, 8, ${opacity})`
-   *
-   * Saat glassFactor = 0 → rgba(10, 8, 8, 0)    = sepenuhnya transparan
-   * Saat glassFactor = 1 → rgba(10, 8, 8, 0.55)  = semi-hitam
    */
   const bgColor = useTransform(
     glassFactor,
@@ -72,12 +64,6 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
 
   /**
    * blur — efek blur backdrop (mengaburkan konten di belakang navbar)
-   *
-   * Saat glassFactor = 0 → blur(0px)   = tidak ada blur
-   * Saat glassFactor = 1 → blur(10px)  = blur maksimal
-   *
-   * backdropFilter adalah properti CSS modern untuk efek "frosted glass".
-   * WebkitBackdropFilter dibutuhkan untuk browser Safari.
    */
   const blur = useTransform(
     glassFactor,
@@ -86,68 +72,137 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
 
   /**
    * borderAlpha — opacity garis bawah navbar
-   *
-   * Saat masih di atas (glassFactor=0) → garis tidak terlihat
-   * Setelah scroll (glassFactor=1) → garis tipis putih (opacity 0.08) muncul
    */
   const borderAlpha = useTransform(
     glassFactor,
     (v) => `rgba(255, 255, 255, ${v * 0.08})`
   );
 
+  // ─────────────────────────────────────────────────────────────
+  // TAUTAN NAVIGASI (satu sumber kebenaran untuk desktop & overlay)
+  // ─────────────────────────────────────────────────────────────
+  const NAV_LINKS = [
+    { label: 'Shop',      href: '#order'   },
+    { label: 'Menu',      href: '#catalog' },
+    { label: 'Our Story', href: '#story'   },
+    { label: 'Contact',   href: '#contact' },
+  ];
+
+  /** Tutup overlay dan scroll ke anchor */
+  const handleOverlayLink = (href) => {
+    setIsMobileMenuOpen(false);
+    // Beri waktu overlay untuk fade-out sebelum scroll
+    setTimeout(() => {
+      document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    }, 200);
+  };
+
   return (
-    /**
-     * motion.nav — elemen <nav> yang bisa menerima animasi Framer Motion
-     *
-     * style={{ backgroundColor, backdropFilter, ... }} menghubungkan
-     * nilai-nilai useTransform ke properti CSS secara langsung dan real-time.
-     * Tidak ada re-render React — nilai diupdate langsung oleh Framer Motion.
-     */
-    <motion.nav
-      className={styles.navbar}
-      variants={{
-        visible: { y: 0 },
-        hidden:  { y: '-100%' },
-      }}
-      animate={isHidden ? 'hidden' : 'visible'}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-      style={{
-        height: navbarHeight,
-        backgroundColor: bgColor,
-        backdropFilter: blur,
-        WebkitBackdropFilter: blur,
-        borderBottomColor: borderAlpha,
-      }}
-    >
-      <div className={styles.navContainer}>
+    <>
+      {/* ── NAVBAR UTAMA ── */}
+      <motion.nav
+        className={styles.navbar}
+        variants={{
+          visible: { y: 0 },
+          hidden:  { y: '-100%' },
+        }}
+        animate={isHidden && !isMobileMenuOpen ? 'hidden' : 'visible'}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        style={{
+          height: navbarHeight,
+          backgroundColor: bgColor,
+          backdropFilter: blur,
+          WebkitBackdropFilter: blur,
+          borderBottomColor: borderAlpha,
+        }}
+      >
+        <div className={styles.navContainer}>
 
-        {/* Link kiri */}
-        <div className={styles.navLinks}>
-          <a href="#order"   className={styles.link}>Shop</a>
-          <a href="#catalog" className={styles.link}>Menu</a>
+          {/* Link kiri — disembunyikan di mobile via CSS */}
+          <div className={styles.navLinks}>
+            <a href="#order"   className={styles.link}>Shop</a>
+            <a href="#catalog" className={styles.link}>Menu</a>
+          </div>
+
+          {/* Logo teks di tengah navbar */}
+          <span style={{
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: '800',
+            fontSize: '1rem',
+            letterSpacing: '0.08em',
+            color: '#FFFFFF',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+          }}>
+            Bima Coffee
+          </span>
+
+          {/* Link kanan — disembunyikan di mobile via CSS */}
+          <div className={`${styles.navLinks} ${styles.navLinksRight}`}>
+            <a href="#story"   className={styles.link}>Our Story</a>
+            <a href="#contact" className={styles.link}>Contact</a>
+          </div>
+
+          {/* ── Tombol MENU mobile — hanya tampil di mobile via CSS ── */}
+          <button
+            className={styles.menuToggle}
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Buka menu navigasi"
+            aria-expanded={isMobileMenuOpen}
+          >
+            [ MENU ]
+          </button>
+
         </div>
+      </motion.nav>
 
-        {/* Logo teks di tengah navbar */}
-        <span style={{
-          fontFamily: "'Inter', sans-serif",
-          fontWeight: '800',
-          fontSize: '1rem',
-          letterSpacing: '0.08em',
-          color: '#FFFFFF',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        }}>
-          Bima Coffee
-        </span>
+      {/* ── FULLSCREEN BRUTALIST OVERLAY MENU ── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            className={styles.overlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+          >
+            {/* Tombol CLOSE — pojok kanan atas */}
+            <button
+              className={styles.overlayClose}
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label="Tutup menu"
+            >
+              [ CLOSE ]
+            </button>
 
-        {/* Link kanan */}
-        <div className={`${styles.navLinks} ${styles.navLinksRight}`}>
-          <a href="#story"   className={styles.link}>Our Story</a>
-          <a href="#contact" className={styles.link}>Contact</a>
-        </div>
+            {/* ── Tautan navigasi — besar, aggressive ── */}
+            <nav className={styles.overlayLinks}>
+              {NAV_LINKS.map(({ label, href }) => (
+                <motion.a
+                  key={href}
+                  href={href}
+                  className={styles.overlayLink}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleOverlayLink(href);
+                  }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {label}
+                </motion.a>
+              ))}
+            </nav>
 
-      </div>
-    </motion.nav>
+            {/* ── Footer info di overlay ── */}
+            <span className={styles.overlayFooter}>
+              Bima Coffee · Lumajang, East Java
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

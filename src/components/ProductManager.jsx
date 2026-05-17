@@ -316,6 +316,8 @@ const ProductManager = ({ products, globalSettings = {}, onProductsChange, onSet
           ) : (
             /* Scrollable wrapper — semua produk tampil sekaligus */
             <div style={{ maxHeight: '65vh', overflowY: 'auto', paddingRight: '6px' }}>
+              {/* Inner: horizontal scroll — mobile fix */}
+              <div style={{ width: '100%', overflowX: 'auto', display: 'block', whiteSpace: 'nowrap' }}>
               <table className={styles.ordersTable}>
                 <thead>
                   <tr style={{
@@ -368,6 +370,7 @@ const ProductManager = ({ products, globalSettings = {}, onProductsChange, onSet
                   ))}
                 </tbody>
               </table>
+              </div> {/* /inner: horizontal scroll */}
             </div>
           )}
         </div>

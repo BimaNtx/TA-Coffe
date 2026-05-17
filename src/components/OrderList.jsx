@@ -161,8 +161,10 @@ const OrderList = ({ orders, isLoading, onRefresh, onUpdateStatus, onPrintOrder,
         </div>
       ) : (
         <>
-        {/* Scrollable wrapper — seluruh data tampil, tabel bisa di-scroll dalam kontainernya */}
+        {/* Outer: vertical scroll container */}
         <div style={{ maxHeight: '65vh', overflowY: 'auto', paddingRight: '6px' }}>
+          {/* Inner: horizontal scroll — mencegah overflow ke luar layar di mobile */}
+          <div style={{ width: '100%', overflowX: 'auto', display: 'block', whiteSpace: 'nowrap' }}>
           <table className={styles.ordersTable}>
             <thead>
               <tr style={{
@@ -254,7 +256,8 @@ const OrderList = ({ orders, isLoading, onRefresh, onUpdateStatus, onPrintOrder,
               ))}
             </tbody>
           </table>
-        </div>
+          </div> {/* /inner: horizontal scroll */}
+        </div> {/* /outer: vertical scroll */}
         </>
       )}
     </div>

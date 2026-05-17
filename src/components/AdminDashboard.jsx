@@ -236,7 +236,20 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
           NAVIGASI TAB
           Mengontrol activeTab state. React re-render tabel yang sesuai.
         */}
-        <div className={styles.tabNav}>
+        {/*
+          Tab nav — overflowX: auto agar bisa di-swipe di layar sempit.
+          scrollbarWidth: none menyembunyikan scrollbar di Firefox.
+          WebkitOverflowScrolling: touch untuk smooth scroll di iOS.
+        */}
+        <div
+          className={styles.tabNav}
+          style={{
+            overflowX: 'auto',
+            whiteSpace: 'nowrap',
+            scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           <button className={`${styles.tabBtn} ${activeTab === 'orders'   ? styles.tabActive : ''}`} onClick={() => setActiveTab('orders')}>
             Daftar Pesanan
           </button>

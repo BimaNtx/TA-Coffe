@@ -76,13 +76,113 @@
   width: 100%;
 }
 
-/* ─── Mobile ──────────────────────────────────── */
+/* ─── Mobile toggle button — hidden on desktop ─── */
+.menuToggle {
+  display: none; /* hidden by default (desktop) */
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  justify-self: end; /* push to right in grid */
+}
+
+/* ─── Fullscreen overlay ──────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+/* Close button — fixed to top-right */
+.overlayClose {
+  position: absolute;
+  top: 2rem;
+  right: 5%;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.overlayClose:hover {
+  color: #ffffff;
+}
+
+/* Nav links inside overlay */
+.overlayLinks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.overlayLink {
+  font-family: 'Inter', sans-serif;
+  font-size: 16vw;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: #ffffff;
+  text-decoration: none;
+  transition: font-style 0.15s ease, opacity 0.15s ease;
+}
+
+.overlayLink:hover {
+  font-style: italic;
+  opacity: 0.5;
+}
+
+/* Footer text inside overlay */
+.overlayFooter {
+  position: absolute;
+  bottom: 2rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── Mobile breakpoint ───────────────────────── */
 @media (max-width: 768px) {
   .navLinks {
-    display: none;
+    display: none; /* hide desktop links */
+  }
+
+  .menuToggle {
+    display: block; /* show mobile toggle */
   }
 
   .logoGap {
     width: 120px;
+  }
+
+  /* Shrink overlay font slightly on very small screens */
+  .overlayLink {
+    font-size: 18vw;
   }
 }
