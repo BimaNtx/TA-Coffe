@@ -17,7 +17,6 @@ import {
 } from 'recharts';
 import { supabase } from '../../supabaseClient';
 import styles from './AdminDashboard.module.css';
-import ConfirmationModal from '../modals/ConfirmationModal';
 import SuccessModal from '../modals/SuccessModal';
 import OrderList from './OrderList';
 import ProductManager from './ProductManager';
@@ -39,9 +38,6 @@ const formatCurrency = (amount) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })
     .format(amount ?? 0);
 
-// ProductFormModal, style constants, ConfirmationModal, SuccessModal
-// untuk fitur produk & pengaturan telah dipindahkan ke ProductManager.jsx
-// → src/components/ProductManager.jsx
 
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN UTAMA
@@ -130,17 +126,6 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
     setTimeout(() => window.print(), 200);
   };
 
-  /**
-   * handleClosePrint — bersihkan state setelah dialog cetak ditutup.
-   * Dipanggil saat user selesai mencetak atau menekan Batal.
-   */
-  const handleClosePrint = () => setPrintOrder(null);
-
-  // ─────────────────────────────────────────────────────────
-  // handleSaveSettings, handleSaveProduct, handleToggleAvailable,
-  // handleDeleteProduct, confirmDeleteProduct
-  // → telah dipindahkan ke ProductManager.jsx
-  // ─────────────────────────────────────────────────────────
 
   // ─────────────────────────────────────────────────────────
   // KALKULASI STATISTIK + PAGINASI
@@ -232,15 +217,7 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
           ))}
         </div>
 
-        {/*
-          NAVIGASI TAB
-          Mengontrol activeTab state. React re-render tabel yang sesuai.
-        */}
-        {/*
-          Tab nav — overflowX: auto agar bisa di-swipe di layar sempit.
-          scrollbarWidth: none menyembunyikan scrollbar di Firefox.
-          WebkitOverflowScrolling: touch untuk smooth scroll di iOS.
-        */}
+        {/* NAVIGASI TAB — overflowX: auto agar bisa di-swipe di layar sempit */}
         <div
           className={styles.tabNav}
           style={{
@@ -442,17 +419,7 @@ const AdminDashboard = ({ navigateTo, products = [], onProductsChange, globalSet
         onClose={() => setSuccessModal({ open: false, title: '', message: '' })}
       />
 
-      {/*
-        ── STRUK CETAK KASIR ────────────────────────────────────────
-        Komponen ini tersembunyi di layar (display:none via CSS inline).
-        Saat window.print() dipanggil, @media print di <style> tag ini
-        menyembunyikan SELURUH elemen website dan hanya menampilkan struk.
-
-        FIX 7-PAGE BUG: overflow:hidden + height:auto pada #admin-receipt-area
-        memastikan tidak ada halaman kosong yang dicetak.
-      *{/*
-        ── STRUK CETAK KASIR ────────────────────────────────────────
-      */}
+      {/* STRUK CETAK KASIR — tersembunyi di layar, hanya tampil saat window.print() */}
       {printOrder && (
         <>
           {/* Inject @media print rule ke <head> secara dinamis */}

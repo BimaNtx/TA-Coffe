@@ -26,10 +26,6 @@ import FullCatalogView    from './components/landing/FullCatalogView';
 
 import './App.css';
 
-// SessionExpiredModal → src/components/SessionExpiredModal.jsx
-// LandingPageView     → src/components/LandingPageView.jsx
-// FullCatalogView     → src/components/FullCatalogView.jsx
-
 // ─────────────────────────────────────────────────────────────
 // KONSTANTA ANIMASI LOGO (dipakai App untuk kalkulasi y & scale
 // yang kemudian di-pass sebagai props ke LandingPageView)

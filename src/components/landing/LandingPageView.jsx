@@ -8,7 +8,8 @@ import ProductCatalog from './ProductCatalog';
 import OrderForm      from './OrderForm';
 import Footer         from '../common/Footer';
 
-// Konstanta animasi logo — harus selaras dengan nilai di App.jsx
+
+// Harus selaras dengan nilai di App.jsx agar animasi logo sinkron
 const NAVBAR_HEIGHT = 80;
 const ANIM_END      = 300;
 
