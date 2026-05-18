@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './OrderForm.module.css';
 
-import { supabase } from '../supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 // Helper: format angka ke format Rupiah — contoh: 85000 → "Rp 85.000"
 const formatRupiah = (num) => 'Rp ' + Number(num).toLocaleString('id-ID');

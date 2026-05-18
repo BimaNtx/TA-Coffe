@@ -1,12 +1,12 @@
 import React from 'react';
 
-import Navbar         from './Navbar';
+import Navbar         from '../common/Navbar';
 import Hero           from './Hero';
 import IntroSection   from './IntroSection';
 import BeanSection    from './BeanSection';
 import ProductCatalog from './ProductCatalog';
 import OrderForm      from './OrderForm';
-import Footer         from './Footer';
+import Footer         from '../common/Footer';
 
 // Konstanta animasi logo — harus selaras dengan nilai di App.jsx
 const NAVBAR_HEIGHT = 80;

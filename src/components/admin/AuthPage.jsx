@@ -19,7 +19,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../../supabaseClient';
 import styles from './AuthPage.module.css';
 
 const AuthPage = ({ navigateTo }) => {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../../supabaseClient';
 import styles from './AdminDashboard.module.css';
-import ConfirmationModal from './ConfirmationModal';
-import SuccessModal from './SuccessModal';
+import ConfirmationModal from '../modals/ConfirmationModal';
+import SuccessModal from '../modals/SuccessModal';
 
 // ─────────────────────────────────────────────────────────────
 // HELPER: Format mata uang Rupiah

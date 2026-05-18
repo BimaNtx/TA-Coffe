@@ -18,11 +18,11 @@ import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { useScroll, useTransform, useSpring } from 'framer-motion';
 
-import AuthPage        from './components/AuthPage';
-import AdminDashboard  from './components/AdminDashboard';
-import SessionExpiredModal from './components/SessionExpiredModal';
-import LandingPageView    from './components/LandingPageView';
-import FullCatalogView    from './components/FullCatalogView';
+import AuthPage        from './components/admin/AuthPage';
+import AdminDashboard  from './components/admin/AdminDashboard';
+import SessionExpiredModal from './components/modals/SessionExpiredModal';
+import LandingPageView    from './components/landing/LandingPageView';
+import FullCatalogView    from './components/landing/FullCatalogView';
 
 import './App.css';
 

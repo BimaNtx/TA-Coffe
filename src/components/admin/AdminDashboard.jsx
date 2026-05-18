@@ -15,10 +15,10 @@ import {
   BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../../supabaseClient';
 import styles from './AdminDashboard.module.css';
-import ConfirmationModal from './ConfirmationModal';
-import SuccessModal from './SuccessModal';
+import ConfirmationModal from '../modals/ConfirmationModal';
+import SuccessModal from '../modals/SuccessModal';
 import OrderList from './OrderList';
 import ProductManager from './ProductManager';
 
