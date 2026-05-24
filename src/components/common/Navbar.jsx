@@ -82,10 +82,10 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
   // TAUTAN NAVIGASI (satu sumber kebenaran untuk desktop & overlay)
   // ─────────────────────────────────────────────────────────────
   const NAV_LINKS = [
-    { label: 'Shop',      href: '#order'   },
-    { label: 'Menu',      href: '#catalog' },
-    { label: 'Our Story', href: '#story'   },
-    { label: 'Contact',   href: '#contact' },
+    { label: 'Shop', href: '#section-pesan' },
+    { label: 'Menu', href: '#catalog' },
+    { label: 'Our Story', href: '#story' },
+    { label: 'Contact', href: '#contact' },
   ];
 
   /** Tutup overlay dan scroll ke anchor */
@@ -104,7 +104,7 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
         className={styles.navbar}
         variants={{
           visible: { y: 0 },
-          hidden:  { y: '-100%' },
+          hidden: { y: '-100%' },
         }}
         animate={isHidden && !isMobileMenuOpen ? 'hidden' : 'visible'}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
@@ -120,7 +120,7 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
 
           {/* Link kiri — disembunyikan di mobile via CSS */}
           <div className={styles.navLinks}>
-            <a href="#order"   className={styles.link}>Shop</a>
+            <a href="#section-pesan" className={styles.link}>Shop</a>
             <a href="#catalog" className={styles.link}>Menu</a>
           </div>
 
@@ -139,7 +139,7 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
 
           {/* Link kanan — disembunyikan di mobile via CSS */}
           <div className={`${styles.navLinks} ${styles.navLinksRight}`}>
-            <a href="#story"   className={styles.link}>Our Story</a>
+            <a href="#story" className={styles.link}>Our Story</a>
             <a href="#contact" className={styles.link}>Contact</a>
           </div>
 

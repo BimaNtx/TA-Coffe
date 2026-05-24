@@ -1,125 +1,61 @@
-/**
- * IntroSection.jsx
- *
- * Section 2 — Pengenalan Brand ("Our Origin")
- *
- * Fitur animasi yang ada di section ini:
- *   1. Bunga kopi (flower.png) — berputar dan bergerak naik saat scroll
- *   2. Teks berjenjang — muncul satu per satu dengan jeda (stagger)
- *
- * Semua animasi TERIKAT pada scroll — jika user berhenti scroll,
- * animasi juga ikut berhenti (tidak ada loop atau timer).
- */
+// 📌 [COMPONENT] IntroSection: Area cerita brand dengan efek animasi scroll (Parallax & Stagger).
+// 🔄 Semua animasi berjalan proporsional mengikuti seberapa jauh user men-scroll layar (tidak ada timer).
 
 import { useRef } from 'react';
 import { useScroll, useTransform, useSpring, motion } from 'framer-motion';
 import styles from './IntroSection.module.css';
 
-/**
- * SPRING CONFIG
- * Nilainya sama dengan BeanSection untuk konsistensi "rasa" animasi
- * di seluruh halaman.
- */
+// 🎨 [ANIMATION] Konfigurasi physics (pegas) untuk memastikan transisi animasi terasa natural.
 const SPRING = { stiffness: 100, damping: 30, restDelta: 0.001 };
 
-/**
- * stagger() — Helper function untuk membuat range waktu yang bergeser
- *
- * Digunakan agar setiap baris teks muncul dengan sedikit jeda dari baris sebelumnya.
- *
- * Contoh untuk baris ke-2 (i=1), base=0.15, step=0.04:
- *   start = 0.15 + 1 * 0.04 = 0.19
- *   end   = 0.19 + 0.12     = 0.31
- * → Baris ke-2 muncul saat scrollYProgress berada di antara 0.19 dan 0.31
- *
- * @param {number} base - scroll progress awal munculnya baris pertama
- * @param {number} i    - index baris (0, 1, 2, dst.)
- * @param {number} step - jeda antar baris dalam satuan scroll progress
- */
+// ⚙️ [LOGIC] Helper untuk menghitung jeda (stagger) antar baris teks agar tidak muncul secara bersamaan.
 const stagger = (base, i, step = 0.04) => [base + i * step, base + i * step + 0.12];
 
 const IntroSection = () => {
+  // 📌 [STATE] Referensi elemen utama (section) untuk mendeteksi posisi scroll user.
   const sectionRef = useRef(null);
 
-  /**
-   * useScroll dengan offset ['start end', 'end start']
-   *
-   * 'start end' — animasi MULAI saat bagian ATAS section menyentuh bagian BAWAH viewport
-   *               (= section mulai masuk dari bawah layar)
-   * 'end start' — animasi SELESAI saat bagian BAWAH section menyentuh bagian ATAS viewport
-   *               (= section sepenuhnya meninggalkan layar ke atas)
-   *
-   * Ini adalah setup paling umum untuk animasi scroll yang mencakup seluruh section.
-   */
+  // 🎨 [ANIMATION] Melacak progress scroll user (nilai 0 s/d 1) khusus di area section ini saja.
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start end', 'end start'],
   });
 
-  // ─────────────────────────────────────────────────────────────
-  // ANIMASI BUNGA
-  // ─────────────────────────────────────────────────────────────
-
-  /**
-   * Rotasi bunga: berputar dari 0° menjadi 180° selama user scroll
-   * melewati seluruh section.
-   */
+  // 🎨 [ANIMATION] Kalkulasi putaran bunga (0° ke 180°) mengikuti nilai scrollYProgress.
   const rawRotate = useTransform(scrollYProgress, [0, 1], [0, 180]);
-  const rotate    = useSpring(rawRotate, SPRING);
+  const rotate = useSpring(rawRotate, SPRING);
 
-  /**
-   * Parallax vertikal bunga: bergerak ke atas (-60px) saat scroll turun.
-   * Karena bergerak lebih lambat dari konten normal, terasa "mengambang".
-   */
+  // 🎨 [ANIMATION] Efek parallax bunga: bergerak vertikal berlawanan arah scroll agar terasa mengambang.
   const rawFlowerY = useTransform(scrollYProgress, [0, 1], [60, -60]);
-  const flowerY    = useSpring(rawFlowerY, SPRING);
+  const flowerY = useSpring(rawFlowerY, SPRING);
 
-
-  // ─────────────────────────────────────────────────────────────
-  // TEKS BERJENJANG (STAGGER)
-  // ─────────────────────────────────────────────────────────────
-
-  /**
-   * makeLineAnim() — membuat animasi opacity + y untuk satu baris teks
-   *
-   * Setiap baris mendapat `i` yang berbeda → range scroll yang berbeda
-   * → baris pertama muncul lebih dulu dari baris kedua, dst.
-   *
-   * Ini adalah pola umum "staggered reveal" dalam web animation.
-   *
-   * @param {number} i - urutan baris (0 = pertama muncul)
-   */
+  // ⚙️ [LOGIC] Pabrik pembuat nilai animasi (opacity & Y) untuk masing-masing baris teks.
   const makeLineAnim = (i) => {
     const [start, end] = stagger(0.15, i);
-
-    // opacity: 0 → 1 (dari transparan ke terlihat)
     const rawO = useTransform(scrollYProgress, [start, end], [0, 1]);
-
-    // y: 28px → 0px (dari bawah ke posisi normal)
     const rawY = useTransform(scrollYProgress, [start, end], [28, 0]);
 
     return {
       opacity: useSpring(rawO, SPRING),
-      y:       useSpring(rawY, SPRING),
+      y: useSpring(rawY, SPRING),
     };
   };
 
-  // Buat animasi untuk masing-masing elemen teks
-  const eyebrow    = makeLineAnim(0); // "Our Origin" — muncul pertama
-  const heading1   = makeLineAnim(1); // "Sourced from the"
-  const heading2   = makeLineAnim(2); // "Heart of Indonesia"
-  const bodyAnim   = makeLineAnim(3); // Paragraf deskripsi
-  const dividerAnim = makeLineAnim(4); // Garis pembatas — muncul terakhir
+  // 🎨 [ANIMATION] Menentukan urutan kemunculan elemen. Index 0 = pertama, 4 = terakhir.
+  const eyebrow = makeLineAnim(0);
+  const heading1 = makeLineAnim(1);
+  const heading2 = makeLineAnim(2);
+  const bodyAnim = makeLineAnim(3);
+  const dividerAnim = makeLineAnim(4);
 
   return (
-    <section 
-      ref={sectionRef} 
-      className={styles.section} 
+    <section
+      ref={sectionRef}
+      className={styles.section}
       id="story"
       style={{ position: 'relative', minHeight: '100vh', width: '100%', backgroundColor: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5rem 2rem' }}
     >
-
-      {/* ── Data koordinat di pojok-pojok (hanya dekorasi visual) ── */}
+      {/* 🖼️ [UI] Dekorasi koordinat statis di 4 sudut layar */}
       <div className={`${styles.meta} ${styles.metaTL}`}>
         <span>8°07'S 113°13'E</span>
         <span>LUMAJANG, EAST JAVA</span>
@@ -138,8 +74,7 @@ const IntroSection = () => {
       </div>
 
       <div className={styles.container}>
-
-        {/* ── Kolom Kiri: Bunga ────────────────────────────── */}
+        {/* 🖼️ [UI] Kolom Kiri: Bunga berputar dan mengambang (Parallax) */}
         <div className={styles.flowerCol}>
           <motion.img
             src="/flower.png"
@@ -149,15 +84,8 @@ const IntroSection = () => {
           />
         </div>
 
-        {/* ── Kolom Kanan: Teks Berjenjang ─────────────────────── */}
+        {/* 🖼️ [UI] Kolom Kanan: Teks berjenjang (Staggered Reveal) */}
         <div className={styles.textCol}>
-
-          {/*
-            Setiap elemen teks dibungkus dengan motion.span atau motion.p.
-            Prop `style` menerima objek dari makeLineAnim() yang berisi
-            nilai opacity dan y yang sudah diolah dengan useSpring.
-          */}
-
           <motion.span className={styles.eyebrow} style={eyebrow}>
             Our Origin
           </motion.span>
@@ -178,10 +106,8 @@ const IntroSection = () => {
             craft.
           </motion.p>
 
-          {/* Garis pembatas tipis — muncul paling terakhir */}
           <motion.div className={styles.divider} style={dividerAnim} />
         </div>
-
       </div>
     </section>
   );

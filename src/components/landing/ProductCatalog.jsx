@@ -1,42 +1,27 @@
-/**
- * ProductCatalog.jsx
- *
- * Section 4 — Katalog Produk "Our Curated Beans"
- *
- * ─────────────────────────────────────────────────────────────
- * FITUR UTAMA:
- *   1. Menampilkan 3 produk unggulan menggunakan .map()
- *   2. Tombol "PESAN SEKARANG" → onSelectProduct() + smooth-scroll ke form
- *   3. Tombol "LIHAT SEMUA MENU" → membuka Custom Modal di dalam komponen ini
- *
- * PROPS:
- *   @prop {function} onSelectProduct — fungsi dari App.jsx yang dipanggil
- *         saat user memilih produk, membawa productId sebagai argumen.
- * ─────────────────────────────────────────────────────────────
- */
+// 📌 [COMPONENT] ProductCatalog: Menampilkan daftar produk (kopi) di halaman utama.
+// 🔄 Menerima data dari App.jsx dan meneruskan interaksi user (klik pesan/lihat semua menu).
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from './ProductCatalog.module.css';
 
-// Helper: format harga dari angka ke Rupiah — contoh: 85000 → "Rp 85.000"
+// ⚙️ [LOGIC] Mengubah angka mentah menjadi format Rupiah standar.
 const formatHarga = (num) => 'Rp ' + Number(num).toLocaleString('id-ID');
 
-// ─────────────────────────────────────────────────────────────
-// KOMPONEN: ProductRow — satu baris per produk (gaya editorial list)
-// ─────────────────────────────────────────────────────────────
+// 🧩 [CHILD COMPONENT] Tampilan satu baris untuk masing-masing produk kopi.
 const ProductCard = ({ product, index, onSelect }) => {
-  const tersedia = product.is_available !== false; // default anggap tersedia
+  // ⚙️ [LOGIC] Cek ketersediaan produk agar tombol "Pesan" bisa di-disable jika habis.
+  const tersedia = product.is_available !== false;
 
+  // ⚙️ [LOGIC] Lempar ID produk ke keranjang (App.jsx) lalu auto-scroll ke form pembayaran.
   const handleOrder = () => {
     if (!tersedia) return;
     onSelect(product.id);
-    // Smooth scroll ke form pemesanan — optional chaining (?.) aman
-    // dipakai di kedua halaman (landing & full_catalog)
     document.getElementById('section-pesan')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
+    // 🎨 [ANIMATION] Efek muncul pelan-pelan dari bawah saat user men-scroll layar.
     <motion.article
       className={styles.productRow}
       initial={{ opacity: 0, y: 30 }}
@@ -44,7 +29,7 @@ const ProductCard = ({ product, index, onSelect }) => {
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.55, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* Kiri: Gambar */}
+      {/* 🖼️ Area Gambar */}
       <div className={styles.rowImage}>
         <img
           src={product.image_url || '/bag1.png'}
@@ -54,7 +39,7 @@ const ProductCard = ({ product, index, onSelect }) => {
         />
       </div>
 
-      {/* Tengah: Nama produk */}
+      {/* 📝 Area Nama Produk & Tag Habis */}
       <div className={styles.rowInfo}>
         <h3 className={styles.productName}>{product.name}</h3>
         {!tersedia && (
@@ -62,7 +47,7 @@ const ProductCard = ({ product, index, onSelect }) => {
         )}
       </div>
 
-      {/* Kanan: Harga + Tombol */}
+      {/* 💰 Area Harga & Tombol Pesan */}
       <div className={styles.rowAction}>
         <span className={styles.price}>{formatHarga(product.price)}</span>
         <button
@@ -79,21 +64,13 @@ const ProductCard = ({ product, index, onSelect }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-// KOMPONEN UTAMA: ProductCatalog
-// ─────────────────────────────────────────────────────────────
-/**
- * onViewAll  — callback dari App.jsx untuk navigasi ke halaman Full Catalog.
- *              Hanya digunakan di mode landing (hideViewAll tidak di-set).
- * hideViewAll — jika true, tombol "Lihat Semua Menu" disembunyikan.
- *              Digunakan saat ProductCatalog dipakai di dalam FullCatalogView.
- */
+// 🧩 [MAIN COMPONENT] Menyusun judul section, daftar produk, dan tombol "Lihat Semua".
 const ProductCatalog = ({ products = [], onSelectProduct, onViewAll, hideViewAll = false }) => {
 
   return (
     <section id="catalog" className={styles.catalogSection}>
 
-      {/* ── Judul Section ──────────────────────────────── */}
+      {/* 🎨 [ANIMATION] Header/Judul Section */}
       <motion.div
         className={styles.sectionHeader}
         initial={{ opacity: 0, y: 24 }}
@@ -102,18 +79,13 @@ const ProductCatalog = ({ products = [], onSelectProduct, onViewAll, hideViewAll
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
         <span className={styles.eyebrow}>Single Origin Collection</span>
-        <h2   className={styles.sectionTitle}>Our Curated Beans</h2>
-        <p    className={styles.sectionSubtitle}>
+        <h2 className={styles.sectionTitle}>Our Curated Beans</h2>
+        <p className={styles.sectionSubtitle}>
           Dipilih langsung dari petani terpercaya di seluruh kepulauan Indonesia.
         </p>
       </motion.div>
 
-      {/*
-        ── List Produk ───────────────────────────────────────
-        .map() menghasilkan satu <ProductRow> per produk.
-        `key={product.id}` wajib ada agar React bisa melacak
-        perubahan list dengan efisien.
-      */}
+      {/* 🔄 [RENDER] Looping data produk dari database untuk mencetak deretan ProductCard */}
       <div className={styles.catalogList}>
         {products.map((product, index) => (
           <ProductCard
@@ -125,11 +97,7 @@ const ProductCatalog = ({ products = [], onSelectProduct, onViewAll, hideViewAll
         ))}
       </div>
 
-      {/*
-        ── Tombol Lihat Semua Menu ───────────────────────────
-        Disembunyikan saat hideViewAll === true (mode FullCatalogView).
-        Memanggil onViewAll() dari App.jsx untuk navigasi ke 'full_catalog'.
-      */}
+      {/* 🧭 [ROUTING] Tombol navigasi ke menu lengkap. Disembunyikan jika sudah di halaman Full Catalog. */}
       {!hideViewAll && (
         <motion.div
           className={styles.viewAllWrap}
