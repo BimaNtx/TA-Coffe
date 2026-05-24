@@ -1,21 +1,5 @@
-/**
- * AuthPage.jsx
- *
- * Halaman Login Admin — Bima Coffee
- * Visual: "Brutalist Security Gate" — tajam, minimalis, tipografi agresif.
- *
- * Konsep React & Keamanan untuk Laporan RPL:
- *   1. async/await   — menunggu respons API Supabase tanpa membekukan UI
- *   2. try/catch     — menangani error: email salah, password salah, dll
- *   3. finally       — memastikan loading SELALU dimatikan setelah proses selesai
- *   4. Supabase Auth — signInWithPassword(email, password) untuk autentikasi
- *
- * Catatan Keamanan (untuk laporan):
- *   Fitur Register sengaja dihapus dari UI ini.
- *   Pembuatan akun admin hanya bisa dilakukan melalui Supabase Dashboard
- *   (Authentication → Users → Invite User) agar tidak sembarangan orang
- *   bisa membuat akun admin secara mandiri.
- */
+// 📌 [COMPONENT] AuthPage: Halaman Login Admin.
+// 🔒 Fitur Register sengaja dihilangkan. Admin baru hanya bisa ditambahkan via Supabase Dashboard demi keamanan.
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -24,79 +8,45 @@ import styles from './AuthPage.module.css';
 
 const AuthPage = ({ navigateTo }) => {
 
-  // ─────────────────────────────────────────────────────────────
-  // STATE
-  // ─────────────────────────────────────────────────────────────
-
-  // Nilai input form — terhubung ke value dan onChange setiap <input>
-  const [email,    setEmail]    = useState('');
+  // 📌 [STATE] Kredensial input pengguna.
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  /**
-   * isSubmitting — true saat menunggu respons dari Supabase
-   * Menonaktifkan tombol login agar tidak bisa diklik dua kali (double submit).
-   */
+  // 📌 [STATE] Mencegah tombol login diklik berulang kali saat sistem sedang memproses (Double Submit).
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /**
-   * errorMessage — menyimpan pesan error dari Supabase (jika login gagal)
-   * Contoh pesan: "Invalid login credentials" → tampil sebagai teks merah.
-   */
+  // 📌 [STATE] Menyimpan pesan error dari Supabase untuk ditampilkan ke layar (misal: "Invalid credentials").
   const [errorMessage, setErrorMessage] = useState('');
 
-  // ─────────────────────────────────────────────────────────────
-  // FUNGSI LOGIN
-  // ─────────────────────────────────────────────────────────────
-
-  /**
-   * handleAuth — dijalankan saat form di-submit
-   *
-   * Alur:
-   *   1. Cegah reload halaman
-   *   2. Aktifkan loading, kosongkan error lama
-   *   3. Panggil supabase.auth.signInWithPassword()
-   *   4. Berhasil → pindah ke Admin Dashboard
-   *   5. Gagal    → tampilkan pesan error
-   *   6. Matikan loading (selalu, via finally)
-   */
+  // 🚀 [FETCH] Menangani proses login menggunakan metode bawaan Supabase Auth.
   const handleAuth = async (e) => {
     e.preventDefault();
-
     setIsSubmitting(true);
     setErrorMessage('');
 
     try {
-      // ── Pemanggilan API Supabase ───────────────────────────
-      // signInWithPassword() mencocokkan email & password dengan
-      // data di tabel auth.users milik Supabase.
-      // Jika cocok, Supabase mengembalikan session token secara otomatis.
+      // 🚀 [FETCH] Mencocokkan data dengan tabel auth.users di Supabase. Jika valid, session token otomatis tersimpan.
       const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        // Login gagal — tampilkan pesan error dari Supabase
         setErrorMessage(error.message);
       } else {
-        // Login berhasil — arahkan ke halaman Admin Dashboard
+        // 🧭 [ROUTING] Login sukses, arahkan langsung ke Dashboard Admin.
         navigateTo('admin');
       }
-
     } catch (err) {
-      // Tangkap error tak terduga (misal: tidak ada koneksi internet)
+      // ⚙️ [LOGIC] Fallback jika terjadi error di luar Supabase (contoh: koneksi internet terputus).
       setErrorMessage('Terjadi kesalahan. Periksa koneksi internet Anda.');
-
     } finally {
-      // finally selalu berjalan, baik login berhasil maupun gagal
+      // ⚙️ [LOGIC] Blok finally selalu dieksekusi untuk mematikan status loading, apapun hasil akhirnya (sukses/gagal).
       setIsSubmitting(false);
     }
   };
 
-  // ─────────────────────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────────────────────
   return (
     <section className={styles.authContainer}>
 
-      {/* ── Back-to-home — fixed top-left text link, like FullCatalogView ── */}
+      {/* 🧭 [ROUTING] Tombol kembali ke Landing Page */}
       <button
         type="button"
         className={styles.backLink}
@@ -106,14 +56,13 @@ const AuthPage = ({ navigateTo }) => {
         ← Return to Roastery
       </button>
 
-      {/* ── Form: free-floating, no card wrapper ── */}
+      {/* 🎨 [ANIMATION] Form login melayang dengan efek brutalist */}
       <motion.div
         className={styles.authForm}
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
-        {/* ── Header ── */}
         <div className={styles.cardHeader}>
           <span className={styles.eyebrow}>Bima Coffee · Admin Portal</span>
           <h1 className={styles.brandTitle}>
@@ -122,12 +71,9 @@ const AuthPage = ({ navigateTo }) => {
           <p className={styles.subtitle}>Authorized Personnel Only</p>
         </div>
 
-        {/* Thin divider between header and form */}
         <div className={styles.divider} />
 
-        {/* ── Login Form ── */}
         <form className={styles.formGroup} onSubmit={handleAuth} noValidate>
-
           <div className={styles.inputWrap}>
             <label htmlFor="email" className={styles.label}>Email</label>
             <input
@@ -136,7 +82,8 @@ const AuthPage = ({ navigateTo }) => {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setErrorMessage(''); // bersihkan error saat user mengetik ulang
+                // ⚙️ [LOGIC] Bersihkan error lama segera setelah user mencoba mengetik ulang.
+                setErrorMessage('');
               }}
               className={styles.inputField}
               placeholder="admin@email.com"
@@ -153,7 +100,7 @@ const AuthPage = ({ navigateTo }) => {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setErrorMessage(''); // bersihkan error saat user mengetik ulang
+                setErrorMessage('');
               }}
               className={styles.inputField}
               placeholder="••••••••"
@@ -162,22 +109,14 @@ const AuthPage = ({ navigateTo }) => {
             />
           </div>
 
-          {/*
-            Pesan Error dari Supabase
-            Hanya muncul jika errorMessage tidak kosong.
-            ⚠ sebagai penanda visual agar mudah diperhatikan.
-          */}
+          {/* 🖼️ [UI] Area pesan error (hanya muncul jika state errorMessage terisi) */}
           {errorMessage && (
             <p className={styles.errorMsg}>
               ⚠ {errorMessage}
             </p>
           )}
 
-          {/*
-            Tombol Submit
-            disabled saat isSubmitting = true → mencegah double-click
-            Teks berubah menjadi "MEMPROSES..." sebagai feedback visual ke user
-          */}
+          {/* ⚙️ [LOGIC] Tombol dilumpuhkan (disabled) selama proses fetch untuk mencegah spam klik */}
           <button
             type="submit"
             className={styles.submitBtn}
@@ -187,7 +126,6 @@ const AuthPage = ({ navigateTo }) => {
           </button>
         </form>
 
-        {/* ── Bottom status indicator ── */}
         <div className={styles.statusLine}>
           <span className={styles.statusDot} />
           <span className={styles.statusText}>

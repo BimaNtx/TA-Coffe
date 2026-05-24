@@ -1,109 +1,50 @@
-/**
- * App.jsx — Root komponen BIMA COFFEE
- *
- * Menggunakan teknik "State-Based Routing":
- *   Berpindah halaman tanpa install react-router-dom,
- *   cukup dengan mengubah nilai state `currentView`.
- *
- * Nilai `currentView` yang tersedia:
- *   'landing' → Halaman utama (Hero, Katalog, Order Form, dll)
- *   'auth'    → Halaman Login / Register
- *   'admin'   → Halaman Admin Console (Dashboard)
- *
- * State Lifting yang tetap berjalan:
- *   `orderItems` dibagi antara ProductCatalog dan OrderForm.
- */
+// 📌 [COMPONENT] App: Root Component (Manajer Utama) Bima Coffee.
+// 🧭 Mengatur navigasi halaman (Routing) dan membagikan data (State Lifting) ke seluruh komponen anak.
 
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { useScroll, useTransform, useSpring } from 'framer-motion';
 
-import AuthPage        from './components/admin/AuthPage';
-import AdminDashboard  from './components/admin/AdminDashboard';
+import AuthPage from './components/admin/AuthPage';
+import AdminDashboard from './components/admin/AdminDashboard';
 import SessionExpiredModal from './components/modals/SessionExpiredModal';
-import LandingPageView    from './components/landing/LandingPageView';
-import FullCatalogView    from './components/landing/FullCatalogView';
+import LandingPageView from './components/landing/LandingPageView';
+import FullCatalogView from './components/landing/FullCatalogView';
 
 import './App.css';
 
-// ─────────────────────────────────────────────────────────────
-// KONSTANTA ANIMASI LOGO (dipakai App untuk kalkulasi y & scale
-// yang kemudian di-pass sebagai props ke LandingPageView)
-// ─────────────────────────────────────────────────────────────
+// 🎨 [ANIMATION] Konstanta perhitungan transisi ukuran dan posisi logo.
 const NAVBAR_HEIGHT = 80;
-const ANIM_END      = 300;
-const SPRING        = { stiffness: 400, damping: 40, mass: 1, restDelta: 0.001 };
+const ANIM_END = 300;
+const SPRING = { stiffness: 400, damping: 40, mass: 1, restDelta: 0.001 };
 
-// ─────────────────────────────────────────────────────────────
-// KOMPONEN UTAMA APP
-// ─────────────────────────────────────────────────────────────
 function App() {
-  const logoRef      = useRef(null);
+  const logoRef = useRef(null);
   const { scrollY } = useScroll();
 
-  /**
-   * idleTimerRef — menyimpan ID dari setTimeout aktif.
-   * Menggunakan useRef (bukan useState) agar update ID tidak
-   * memicu re-render komponen setiap kali timer di-reset.
-   */
+  // 📌 [STATE] Referensi timer deteksi idle (menggunakan useRef agar tidak memicu re-render berulang).
   const idleTimerRef = useRef(null);
 
-  /**
-   * currentView — State utama navigasi halaman
-   *
-   * Ini adalah pengganti react-router-dom yang sederhana.
-   * Cukup ubah nilai string ini untuk "berpindah halaman".
-   *
-   * Nilai yang tersedia: 'landing' | 'auth' | 'admin'
-   *
-   * Lazy initializer: fungsi di dalam useState() dijalankan SEKALI saat pertama render.
-   * localStorage.getItem() membaca nilai yang tersimpan dari sesi sebelumnya.
-   * Jika tidak ada nilai tersimpan (buka pertama kali), fallback ke 'landing'.
-   */
+  // 🧭 [ROUTING] State pengganti react-router. Menyimpan posisi halaman dengan fallback aman dari localStorage.
   const [currentView, setCurrentView] = useState(() => {
     const saved = localStorage.getItem('bimaCoffeeView');
-    // Whitelist nilai yang valid. Jika localStorage menyimpan nilai
-    // tak dikenal (sisa cache undo/restore seperti 'full_catalog'),
-    // paksa fallback ke 'landing' agar tidak terjadi blank screen.
     const VALID_VIEWS = ['landing', 'auth', 'admin', 'full_catalog'];
     return VALID_VIEWS.includes(saved) ? saved : 'landing';
   });
 
-  /**
-   * navigateTo — fungsi pembantu untuk berpindah halaman
-   * Diteruskan ke semua komponen anak yang butuh pindah halaman.
-   *
-   * @param {string} view - nama halaman tujuan
-   */
+  // 🧭 [ROUTING] Fungsi pembantu untuk pindah halaman, reset scroll ke atas, dan hapus sisa URL (hash).
   const navigateTo = (view) => {
     setCurrentView(view);
-    // Hapus hash fragment (#order, #catalog, dll) dari URL agar tidak
-    // menyebabkan auto-scroll saat user me-refresh halaman
     window.history.replaceState(null, '', window.location.pathname);
-    // Langsung ke paling atas (tanpa animasi agar transisi halaman terasa tegas)
     window.scrollTo(0, 0);
   };
 
-  /**
-   * useEffect #1 — sinkronisasi currentView ke localStorage
-   *
-   * Setiap kali currentView berubah (user berpindah halaman),
-   * nilai baru langsung disimpan ke localStorage.
-   * Sehingga jika halaman di-refresh, state tidak hilang.
-   */
+  // ⚙️ [LOGIC] Auto-save: simpan halaman terakhir ke memori browser setiap kali user pindah view.
   useEffect(() => {
     localStorage.setItem('bimaCoffeeView', currentView);
   }, [currentView]);
 
-  /**
-   * useEffect #2 — pembersih hash saat pertama kali halaman dimuat
-   *
-   * Skenario: user me-refresh halaman saat URL masih mengandung hash
-   * (misal: localhost:5173/#order). Efek ini membersihkan hash tersebut
-   * dan mengembalikan scroll ke atas SEBELUM React merender apapun.
-   *
-   * Array dependensi kosong [] = hanya berjalan SEKALI saat mount.
-   */
+  // ⚙️ [LOGIC] Pembersih awal: hapus hash fragment di URL jika user me-refresh halaman secara paksa.
   useEffect(() => {
     if (window.location.hash) {
       window.history.replaceState(null, '', window.location.pathname);
@@ -111,211 +52,111 @@ function App() {
     }
   }, []);
 
-  // ── State Produk (dari Supabase) ─────────────────────────
-
-  /**
-   * products — daftar produk live dari tabel `produk` di Supabase
-   * Digunakan oleh ProductCatalog (kartu) dan OrderForm (dropdown).
-   * Disimpan di App agar AdminDashboard bisa memperbarui via onProductsChange.
-   */
-  const [products,          setProducts]          = useState([]);
+  // 📌 [STATE] Data master produk (diangkat ke sini agar bisa dipakai Katalog dan form Kasir).
+  const [products, setProducts] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
-  /**
-   * userRole — role pengguna yang sedang login, diambil dari tabel `profiles`.
-   * Nilai yang mungkin: 'owner' | 'kasir' | 'barista' | null
-   * null berarti belum ada sesi aktif atau role belum selesai di-fetch.
-   */
+  // 📌 [STATE] Peran admin yang sedang login ('owner', 'kasir', 'barista').
   const [userRole, setUserRole] = useState(null);
 
-  /**
-   * isSessionExpired — flag yang memicu tampilnya SessionExpiredModal.
-   * true  = modal ditampilkan (sesi habis karena idle).
-   * false = kondisi normal, modal tidak tampil.
-   */
+  // 📌 [STATE] Flag pemicu untuk memunculkan pop-up sesi habis (auto-logout).
   const [isSessionExpired, setIsSessionExpired] = useState(false);
 
+  // 🚀 [FETCH] Mengambil daftar seluruh produk kopi dari database Supabase (diurutkan abjad).
   const fetchProducts = async () => {
     setIsLoadingProducts(true);
-    const { data, error } = await supabase
-      .from('produk')
-      .select('*')
-      .order('name', { ascending: true });
+    const { data, error } = await supabase.from('produk').select('*').order('name', { ascending: true });
     if (!error) setProducts(data ?? []);
     setIsLoadingProducts(false);
   };
 
-  // Muat produk sekali saat komponen pertama kali dirender
   useEffect(() => { fetchProducts(); }, []);
 
-  // ── State Pengaturan Global (dari Supabase) ───────────────
-
-  /**
-   * globalSettings — konfigurasi aplikasi yang dikelola admin
-   * Diambil dari tabel `pengaturan` baris id=1 di Supabase.
-   *
-   * Struktur: { pajak_aktif: boolean, pajak_persen: number }
-   *
-   * Digunakan oleh OrderForm untuk kalkulasi otomatis tanpa
-   * membiarkan pelanggan mengubah pajak sendiri.
-   */
+  // 📌 [STATE] Pengaturan global (contoh: status dan persentase pajak PPN).
   const [globalSettings, setGlobalSettings] = useState({
     pajak_aktif: false,
     pajak_persen: 11,
   });
 
+  // 🚀 [FETCH] Mengambil konfigurasi pajak dari database.
   const fetchSettings = async () => {
-    const { data, error } = await supabase
-      .from('pengaturan')
-      .select('pajak_aktif, pajak_persen')
-      .eq('id', 1)
-      .single();
+    const { data, error } = await supabase.from('pengaturan').select('pajak_aktif, pajak_persen').eq('id', 1).single();
     if (!error && data) setGlobalSettings(data);
   };
 
-  // Muat pengaturan sekali saat mount, bersamaan dengan produk
   useEffect(() => { fetchSettings(); }, []);
 
-  // ── Fetch Role User dari Supabase Profiles ────────────────
-
-  /**
-   * useEffect #role — Memantau perubahan sesi autentikasi (login/logout).
-   *
-   * Saat sesi aktif ditemukan, lakukan fetch ke tabel `profiles` untuk
-   * mendapatkan role user yang sedang login, lalu simpan ke state `userRole`.
-   * Saat logout, reset userRole kembali ke null.
-   *
-   * onAuthStateChange juga menangkap sesi awal via event 'INITIAL_SESSION',
-   * sehingga tidak perlu memanggil getSession() secara terpisah.
-   */
-  // ── Fetch Role User dari Supabase Profiles ────────────────
+  // 🚀 [FETCH] Memantau status login. Jika ada sesi aktif, tarik data role/peran user dari tabel profiles.
   useEffect(() => {
-    // Fungsi pembantu untuk nembak ke database profil
-    // Fungsi pembantu untuk nembak ke database profil
     const getRoleFromDB = async (userId) => {
       console.log("🔍 [DEBUG] Mencoba ambil role untuk ID User:", userId);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-      
+      const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single();
       console.log("📦 [DEBUG] Data dari Supabase:", data);
       console.log("🚨 [DEBUG] Error dari Supabase:", error);
 
       if (data && !error) {
-        setUserRole(data.role); // Berhasil dapat role!
+        setUserRole(data.role);
       } else {
         setUserRole(null);
       }
     };
 
-    // 1. Cek paksa saat halaman pertama kali di-refresh
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) getRoleFromDB(session.user.id);
     });
 
-    // 2. Pantau kalau ada yang baru login atau logout
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          getRoleFromDB(session.user.id);
-        } else {
-          setUserRole(null);
-        }
-      }
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) getRoleFromDB(session.user.id);
+      else setUserRole(null);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Auto-Logout: Idle Timeout ─────────────────────────────
-
-  /**
-   * IDLE_TIMEOUT — durasi tidak aktif (ms) sebelum sesi otomatis berakhir.
-   *
-   * Saat ini: 1 menit (60_000 ms) — untuk keperluan testing.
-   * Produksi: ganti ke 10 menit (600000 ms).
-   */
+  // ⚙️ [LOGIC] Sensor Keamanan (Idle Timeout): Waktu maksimal admin pasif sebelum ditendang keluar.
   const IDLE_TIMEOUT = 600000; // 10 menit
 
-  /**
-   * useEffect #idle — Deteksi ketidakaktifan user dan logout otomatis.
-   *
-   * Hanya aktif saat currentView === 'admin' agar timer tidak berjalan
-   * di halaman landing atau auth (tidak ada sesi yang perlu dijaga).
-   *
-   * Alur kerja:
-   *   1. Pasang event listener untuk setiap interaksi user.
-   *   2. Setiap interaksi memanggil resetTimer().
-   *   3. resetTimer() membersihkan timer lama dan membuat timer baru.
-   *   4. Jika tidak ada interaksi selama IDLE_TIMEOUT ms, jalankan logout.
-   *   5. Saat currentView berubah (bukan 'admin') atau komponen unmount,
-   *      bersihkan semua listener dan timer.
-   */
+  // ⚙️ [LOGIC] Memantau pergerakan mouse/keyboard. Jika tidak ada aktivitas, otomatis eksekusi logout.
   useEffect(() => {
-    // Guard: hanya jalankan saat user berada di halaman admin
-    if (currentView !== 'admin') return;
+    if (currentView !== 'admin') return; // Hanya aktif di halaman dashboard admin
 
     const handleLogout = async () => {
       await supabase.auth.signOut();
       setUserRole(null);
-      // Tampilkan modal custom — JANGAN navigateTo dulu agar modal
-      // bisa muncul di atas view yang sedang aktif sebelum user diklik.
       setIsSessionExpired(true);
     };
 
     const resetTimer = () => {
-      // Bersihkan timer lama agar tidak ada duplikat yang berjalan
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      // Buat timer baru
       idleTimerRef.current = setTimeout(handleLogout, IDLE_TIMEOUT);
     };
 
-    // Event-event yang dianggap sebagai "aktivitas user"
     const ACTIVITY_EVENTS = ['mousemove', 'keydown', 'click', 'scroll'];
-
-    // Pasang semua listener
     ACTIVITY_EVENTS.forEach(event => window.addEventListener(event, resetTimer));
-
-    // Mulai timer pertama kali saat halaman admin dibuka
     resetTimer();
 
-    // Cleanup: hapus semua listener dan timer saat:
-    //   - currentView berubah (user pindah dari halaman admin)
-    //   - komponen unmount
     return () => {
       ACTIVITY_EVENTS.forEach(event => window.removeEventListener(event, resetTimer));
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentView]); // Re-run setiap currentView berubah (aktifkan/nonaktifkan guard)
+  }, [currentView]);
 
-  // ── State Lifting: orderItems ─────────────────────────────
+  // 📌 [STATE] "Nampan Belanja" — menyimpan daftar pesanan sementara yang dibagikan antar komponen.
   const [orderItems, setOrderItems] = useState([{ productId: '', quantity: 1 }]);
 
-  /**
-   * smartAddProduct — logika cerdas saat user klik "PESAN SEKARANG"
-   * Tiga tahap: cek duplikat → isi baris kosong → tambah baris baru
-   */
+  // ⚙️ [LOGIC] Mengisi kopi ke baris keranjang yang kosong, lalu otomatis gulir (scroll) ke form kasir.
   const smartAddProduct = (selectedId) => {
     setOrderItems(prev => {
-      const sudahAda   = prev.some(item => item.productId === selectedId);
+      const sudahAda = prev.some(item => item.productId === selectedId);
       if (sudahAda) return prev;
 
       const indexKosong = prev.findIndex(item => item.productId === '');
       if (indexKosong !== -1) {
-        return prev.map((item, i) =>
-          i === indexKosong ? { ...item, productId: selectedId } : item
-        );
+        return prev.map((item, i) => i === indexKosong ? { ...item, productId: selectedId } : item);
       }
 
-      const MAKS_PRODUK = products.length || 3; // ikuti jumlah produk aktual dari database
-      if (prev.length < MAKS_PRODUK) {
-        return [...prev, { productId: selectedId, quantity: 1 }];
-      }
-
+      const MAKS_PRODUK = products.length || 3;
+      if (prev.length < MAKS_PRODUK) return [...prev, { productId: selectedId, quantity: 1 }];
       return prev;
     });
 
@@ -324,14 +165,14 @@ function App() {
     }, 100);
   };
 
-  // ── Animasi Logo ──────────────────────────────────────────
+  // 🎨 [ANIMATION] Mengukur layar user untuk menentukan titik awal dan akhir transisi logo.
   const [yStart, setYStart] = useState(-200);
-  const [yEnd,   setYEnd]   = useState(-200);
+  const [yEnd, setYEnd] = useState(-200);
 
   useLayoutEffect(() => {
     if (!logoRef.current) return;
     const recalc = () => {
-      const vh    = window.innerHeight;
+      const vh = window.innerHeight;
       const logoH = logoRef.current.offsetHeight;
       setYStart(vh / 2 - logoH / 2);
       setYEnd(NAVBAR_HEIGHT / 2 - logoH / 2);
@@ -341,31 +182,21 @@ function App() {
     return () => window.removeEventListener('resize', recalc);
   }, []);
 
-  const rawY     = useTransform(scrollY, [0, ANIM_END], [yStart, yEnd]);
+  // 🎨 [ANIMATION] Mengubah nilai scroll menjadi animasi pergerakan (Y) dan ukuran (Scale) dengan fisika pegas.
+  const rawY = useTransform(scrollY, [0, ANIM_END], [yStart, yEnd]);
   const rawScale = useTransform(scrollY, [0, ANIM_END], [1, 0.27]);
-  const y        = useSpring(rawY,     SPRING);
-  const scale    = useSpring(rawScale, SPRING);
+  const y = useSpring(rawY, SPRING);
+  const scale = useSpring(rawScale, SPRING);
 
-  // ─────────────────────────────────────────────────────────
-  // CONDITIONAL RENDERING — State-Based Routing
-  //
-  // Direfactor dari pola early-return menjadi satu return tunggal
-  // agar SessionExpiredModal dapat selalu di-render di atas semua
-  // view (landing, auth, maupun admin) tanpa terpotong early-return.
-  // ─────────────────────────────────────────────────────────
-
-  /**
-   * handleLoginBack — dipanggil saat user klik "Login Kembali" di modal.
-   * Sembunyikan modal dulu, baru navigasi ke halaman auth.
-   */
+  // ⚙️ [LOGIC] Menutup modal "Sesi Habis" dan mengembalikan user ke halaman login (auth).
   const handleLoginBack = () => {
     setIsSessionExpired(false);
     navigateTo('auth');
   };
 
+  // 🔄 [RENDER] Conditional Rendering: Menampilkan komponen UI berdasarkan string yang tersimpan di `currentView`.
   return (
     <>
-      {/* ── View aktif berdasarkan currentView ── */}
       {currentView === 'auth' && (
         <AuthPage navigateTo={navigateTo} />
       )}
@@ -408,7 +239,7 @@ function App() {
         />
       )}
 
-      {/* ── SessionExpiredModal: selalu bisa overlay di atas view manapun ── */}
+      {/* Pop-up Modal yang muncul melayang jika isSessionExpired = true */}
       {isSessionExpired && (
         <SessionExpiredModal onLoginBack={handleLoginBack} />
       )}
