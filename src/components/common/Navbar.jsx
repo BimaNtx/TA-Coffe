@@ -1,19 +1,5 @@
-/**
- * Navbar.jsx
- *
- * Komponen navigasi yang selalu tampil di bagian atas layar (position: fixed).
- *
- * Fitur utama:
- *   - Efek background hitam solid saat user scroll ke bawah
- *   - Smart hide-on-scroll: sembunyi saat scroll turun, muncul saat scroll naik
- *   - Animasi berbasis scroll menggunakan useTransform Framer Motion
- *   - Fullscreen Brutalist Overlay Menu untuk tampilan mobile
- *
- * Props yang diterima dari App.jsx:
- *   @prop {MotionValue<number>} scrollY      — nilai posisi scroll saat ini (dalam px)
- *   @prop {number}             navbarHeight  — tinggi navbar dalam px (default: 80)
- *   @prop {number}             animEnd       — titik scroll (px) dimana animasi selesai
- */
+// 📌 [COMPONENT] Navbar: Navigasi utama yang selalu melayang di atas layar (sticky).
+// 🎨 Dilengkapi efek glassmorphism (transparan ke blur) dan fitur Smart Hide-on-Scroll.
 
 import { useState } from 'react';
 import { useTransform, useScroll as usePageScroll, useMotionValueEvent, motion, AnimatePresence } from 'framer-motion';
@@ -21,27 +7,18 @@ import styles from './Navbar.module.css';
 
 const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
 
-  // ─────────────────────────────────────────────────────────────
-  // SMART HIDE-ON-SCROLL
-  // ─────────────────────────────────────────────────────────────
-
+  // 📌 [STATE] Mengontrol visibilitas navbar (sembunyi saat scroll turun, muncul saat scroll naik).
   const [isHidden, setIsHidden] = useState(false);
 
-  // ─────────────────────────────────────────────────────────────
-  // MOBILE MENU STATE
-  // ─────────────────────────────────────────────────────────────
+  // 📌 [STATE] Mengontrol status buka/tutup menu fullscreen khusus untuk tampilan mobile.
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  /**
-   * usePageScroll() membuat scrollY lokal untuk deteksi ARAH scroll.
-   * Berbeda dari prop `scrollY` (dari App.jsx) yang dipakai untuk
-   * animasi glass/logo — keduanya bisa hidup berdampingan.
-   */
+  // 🎨 [ANIMATION] Melacak pergerakan scroll halaman secara global untuk mendeteksi arah scroll.
   const { scrollY: pageScrollY } = usePageScroll();
 
+  // ⚙️ [LOGIC] Membandingkan posisi scroll saat ini dengan sebelumnya. Jika turun > 150px, sembunyikan Navbar.
   useMotionValueEvent(pageScrollY, 'change', (latest) => {
     const previous = pageScrollY.getPrevious() ?? 0;
-    // Sembunyikan saat scroll KE BAWAH dan sudah melewati 150px
     if (latest > previous && latest > 150) {
       setIsHidden(true);
     } else {
@@ -49,38 +26,13 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
     }
   });
 
-  /**
-   * glassFactor — angka antara 0 dan 1 yang mengontrol intensitas efek glass
-   */
+  // 🎨 [ANIMATION] Serangkaian efek transformasi gaya (style) navbar yang berubah beriringan dengan posisi scroll user.
   const glassFactor = useTransform(scrollY, [animEnd * 0.5, animEnd], [0, 1]);
+  const bgColor = useTransform(glassFactor, (v) => `rgba(0, 0, 0, ${v})`);
+  const blur = useTransform(glassFactor, (v) => `blur(${v * 10}px)`);
+  const borderAlpha = useTransform(glassFactor, (v) => `rgba(255, 255, 255, ${v * 0.08})`);
 
-  /**
-   * bgColor — warna latar navbar, berubah dari transparan ke semi-hitam
-   */
-  const bgColor = useTransform(
-    glassFactor,
-    (v) => `rgba(0, 0, 0, ${v})`
-  );
-
-  /**
-   * blur — efek blur backdrop (mengaburkan konten di belakang navbar)
-   */
-  const blur = useTransform(
-    glassFactor,
-    (v) => `blur(${v * 10}px)`
-  );
-
-  /**
-   * borderAlpha — opacity garis bawah navbar
-   */
-  const borderAlpha = useTransform(
-    glassFactor,
-    (v) => `rgba(255, 255, 255, ${v * 0.08})`
-  );
-
-  // ─────────────────────────────────────────────────────────────
-  // TAUTAN NAVIGASI (satu sumber kebenaran untuk desktop & overlay)
-  // ─────────────────────────────────────────────────────────────
+  // ⚙️ [LOGIC] Master daftar tautan agar konsisten digunakan di mode Desktop maupun Mobile.
   const NAV_LINKS = [
     { label: 'Shop', href: '#section-pesan' },
     { label: 'Menu', href: '#catalog' },
@@ -88,10 +40,9 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
     { label: 'Contact', href: '#contact' },
   ];
 
-  /** Tutup overlay dan scroll ke anchor */
+  // ⚙️ [LOGIC] Menutup menu mobile, menunggu 200ms agar animasi fade-out selesai, lalu auto-scroll ke section yang dituju.
   const handleOverlayLink = (href) => {
     setIsMobileMenuOpen(false);
-    // Beri waktu overlay untuk fade-out sebelum scroll
     setTimeout(() => {
       document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
     }, 200);
@@ -99,7 +50,7 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
 
   return (
     <>
-      {/* ── NAVBAR UTAMA ── */}
+      {/* 🖼️ [UI] Navbar Utama (Desktop & Tablet) */}
       <motion.nav
         className={styles.navbar}
         variants={{
@@ -117,33 +68,21 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
         }}
       >
         <div className={styles.navContainer}>
-
-          {/* Link kiri — disembunyikan di mobile via CSS */}
           <div className={styles.navLinks}>
             <a href="#section-pesan" className={styles.link}>Shop</a>
             <a href="#catalog" className={styles.link}>Menu</a>
           </div>
 
-          {/* Logo teks di tengah navbar */}
-          <span style={{
-            fontFamily: "'Inter', sans-serif",
-            fontWeight: '800',
-            fontSize: '1rem',
-            letterSpacing: '0.08em',
-            color: '#FFFFFF',
-            textTransform: 'uppercase',
-            whiteSpace: 'nowrap',
-          }}>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: '800', fontSize: '1rem', letterSpacing: '0.08em', color: '#FFFFFF', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
             Bima Coffee
           </span>
 
-          {/* Link kanan — disembunyikan di mobile via CSS */}
           <div className={`${styles.navLinks} ${styles.navLinksRight}`}>
             <a href="#story" className={styles.link}>Our Story</a>
             <a href="#contact" className={styles.link}>Contact</a>
           </div>
 
-          {/* ── Tombol MENU mobile — hanya tampil di mobile via CSS ── */}
+          {/* 📱 [UI] Tombol Hamburger Menu (Hanya terlihat di layar kecil via CSS) */}
           <button
             className={styles.menuToggle}
             onClick={() => setIsMobileMenuOpen(true)}
@@ -152,11 +91,10 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
           >
             [ MENU ]
           </button>
-
         </div>
       </motion.nav>
 
-      {/* ── FULLSCREEN BRUTALIST OVERLAY MENU ── */}
+      {/* 📱 [UI] Fullscreen Overlay Menu khusus Mobile */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -166,16 +104,10 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeInOut' }}
           >
-            {/* Tombol CLOSE — pojok kanan atas */}
-            <button
-              className={styles.overlayClose}
-              onClick={() => setIsMobileMenuOpen(false)}
-              aria-label="Tutup menu"
-            >
+            <button className={styles.overlayClose} onClick={() => setIsMobileMenuOpen(false)} aria-label="Tutup menu">
               [ CLOSE ]
             </button>
 
-            {/* ── Tautan navigasi — besar, aggressive ── */}
             <nav className={styles.overlayLinks}>
               {NAV_LINKS.map(({ label, href }) => (
                 <motion.a
@@ -195,7 +127,6 @@ const Navbar = ({ scrollY, navbarHeight, animEnd }) => {
               ))}
             </nav>
 
-            {/* ── Footer info di overlay ── */}
             <span className={styles.overlayFooter}>
               Bima Coffee · Lumajang, East Java
             </span>
