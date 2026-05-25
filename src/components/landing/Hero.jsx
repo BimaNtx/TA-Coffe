@@ -1,12 +1,5 @@
-/**
- * Hero.jsx — Editorial Grid Layout
- *
- * Terinspirasi: tillerdigital.com, atomic.black
- * Layout: 12-column grid asimetris
- *   - Kolom 1-7 : teks raksasa BIMA / COFFEE
- *   - Kolom 6-12: gambar sinematik biji kopi (overlap ke kolom teks)
- *   - Metadata bar di bawah bergaya "data sheet"
- */
+// 📌 [COMPONENT] Hero: Bagian paling atas (wajah) website dengan desain Editorial Grid asimetris (Brutalist).
+// 🖼️ Fokus murni pada presentasi visual (UI/UX) tanpa ada logika fetching data.
 
 import { motion } from 'framer-motion';
 import styles from './Hero.module.css';
@@ -15,32 +8,29 @@ const Hero = () => {
   return (
     <section className={styles.hero}>
 
-      {/* ── Grid utama 12 kolom ───────────────────────────────── */}
+      {/* 🖼️ [UI] Layout Grid Utama: Membagi area untuk teks raksasa di kiri dan gambar di kanan. */}
       <div className={styles.grid}>
 
-        {/* ── Blok teks (kolom 1–7) ───────────────────────────── */}
         <div className={styles.textBlock}>
-
-          {/* Label atas — "PREMIUM ROASTERY" */}
+          {/* 🖼️ [UI] Label Metadata Atas */}
           <div className={styles.eyebrowRow}>
             <span className={styles.eyebrow}>Premium Roastery</span>
             <span className={styles.eyebrowDivider} />
             <span className={styles.eyebrow}>Est. 2024</span>
           </div>
 
-          {/* Teks raksasa: BIMA kiri, COFFEE kanan */}
+          {/* 🖼️ [UI] Teks Utama (Tipografi Agresif) */}
           <div className={styles.titleStack}>
             <h1 className={styles.wordBima}>BIMA</h1>
-            <p  className={styles.wordCoffee}>COFFEE</p>
+            <p className={styles.wordCoffee}>COFFEE</p>
           </div>
 
-          {/* Tagline bawah teks */}
           <p className={styles.tagline}>
             Single origin · Arabica · Highlands of Lumajang
           </p>
         </div>
 
-        {/* ── Blok gambar — gradient overlay agar menyatu ke hitam ── */}
+        {/* 🖼️ [UI] Blok Gambar dengan efek gradient transparan agar menyatu dengan background hitam. */}
         <div className={styles.imageBlock}>
           <div className={styles.imageContainer}>
             <div className={styles.imageOverlay} />
@@ -54,7 +44,7 @@ const Hero = () => {
 
       </div>
 
-      {/* ── Bottom metadata bar ───────────────────────────────── */}
+      {/* 🖼️ [UI] Baris Bawah: Menampilkan informasi spesifikasi kopi. */}
       <div className={styles.bottomBar}>
 
         <div className={styles.metaGroup}>
@@ -65,7 +55,7 @@ const Hero = () => {
           <span className={styles.metaLabel}>Full Washed</span>
         </div>
 
-        {/* CTA scroll — pojok kanan bawah */}
+        {/* 🎨 [ANIMATION] Call to Action (CTA) Scroll: Animasi panah bergerak naik-turun (loop tak terhingga). */}
         <motion.div
           className={styles.scrollCta}
           animate={{ y: [0, 7, 0] }}
@@ -73,8 +63,8 @@ const Hero = () => {
         >
           <span className={styles.ctaText}>Scroll to Discover</span>
           <svg width="14" height="22" viewBox="0 0 14 22" fill="none" className={styles.ctaArrow}>
-            <line x1="7" y1="0" x2="7" y2="18" stroke="currentColor" strokeWidth="1"/>
-            <polyline points="2,13 7,19 12,13" fill="none" stroke="currentColor" strokeWidth="1"/>
+            <line x1="7" y1="0" x2="7" y2="18" stroke="currentColor" strokeWidth="1" />
+            <polyline points="2,13 7,19 12,13" fill="none" stroke="currentColor" strokeWidth="1" />
           </svg>
         </motion.div>
 

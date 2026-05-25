@@ -1,16 +1,73 @@
-# React + Vite
+# BIMA COFFEE — Specialty Coffee Roaster ☕
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistem *Point of Sales* (POS) dan *Landing Page* interaktif yang dibangun menggunakan React.js dan Supabase. Proyek ini dikembangkan sebagai tugas implementasi nyata sistem kasir dan katalog digital untuk *coffee shop*.
 
-Currently, two official plugins are available:
+## 🚀 Fitur Utama
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Sistem ini memisahkan antarmuka pengguna menjadi dua bagian utama menggunakan pendekatan *State-Based Routing* dan *Role-Based Access Control* (RBAC).
 
-## React Compiler
+### 1. Customer Facing (Landing Page & Order)
+* **Katalog Interaktif:** Menampilkan kurasi biji kopi *single-origin* dengan efek animasi *scroll* berbasis Framer Motion.
+* **Smart Cart System:** Penambahan menu cerdas yang mencegah duplikasi item.
+* **Formulir Pemesanan POS:** Mendukung dua tipe pesanan (*Dine In* dan *Takeaway*).
+* **Kalkulasi Otomatis:** Menghitung total harga, *subtotal*, dan pengenaan pajak PPN secara *real-time*.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. Admin Console (Dashboard & Manajemen)
+* **Manajemen Pesanan (Kasir):** Memantau pesanan masuk, memperbarui status (Pending → Diproses → Selesai), dan sistem cetak struk (Thermal Printer Style via `@media print`).
+* **Manajemen Menu (CRUD):** Tambah, edit, hapus, dan ubah status ketersediaan produk (khusus role *Owner*).
+* **Pengaturan Global:** Konfigurasi status pajak PPN dan persentasenya.
+* **Laporan Analitik:** Visualisasi tren pendapatan harian dan menu terlaris menggunakan grafik *Recharts*.
+* **Sistem Keamanan:** Autentikasi Supabase, pembatasan akses (*Barista* tidak dapat melihat harga/struk), dan fitur *Auto-Logout* (Idle Timeout).
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+* **Frontend Framework:** [React.js](https://react.dev/) (Vite)
+* **Backend & Database:** [Supabase](https://supabase.com/) (PostgreSQL + Auth)
+* **Styling & UI:** CSS Modules (High-Contrast Brutalism Design)
+* **Animation:** [Framer Motion](https://www.framer.com/motion/)
+* **Data Visualization:** [Recharts](https://recharts.org/)
+
+## 📦 Panduan Instalasi (Lokal)
+
+Ikuti langkah-langkah berikut untuk menjalankan proyek ini di mesin lokal Anda:
+
+1. **Clone repositori ini:**
+   ```bash
+   git clone [https://github.com/username-kamu/bima-coffee.git](https://github.com/username-kamu/bima-coffee.git)
+   cd bima-coffee
+   ```
+
+2. **Install dependensi (Package Modules):**
+   ```bash
+   npm install
+   ```
+
+3. **Konfigurasi Environment Variables:**
+   Buat file baru bernama `.env.local` di root folder, lalu isi dengan kredensial Supabase Anda:
+   ```env
+   VITE_SUPABASE_URL=https://[PROJECT_ID].supabase.co
+   VITE_SUPABASE_ANON_KEY=[YOUR_ANON_KEY]
+   ```
+
+4. **Jalankan Development Server:**
+   ```bash
+   npm run dev
+   ```
+   Aplikasi akan berjalan di `http://localhost:5173/`
+
+## 📂 Struktur Direktori Utama
+
+```text
+src/
+├── components/
+│   ├── admin/      # Logika dashboard, CRUD menu, dan tabel pesanan
+│   ├── landing/    # Komponen halaman publik (Hero, Katalog, Form)
+│   └── modals/     # Sistem pop-up (Alert, Konfirmasi, Sukses)
+├── App.jsx         # Root component & State-Based Routing Controller
+├── App.css         # Variabel CSS global
+└── main.jsx        # React DOM entry point
+```
+
+## 👨‍💻 Pengembang
+
+Dikembangkan oleh **Bima Ananta**
