@@ -34,7 +34,7 @@
   font-weight: 700;
   font-size: 15vw;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.0em;
 
   /* Solid white fill, slightly transparent */
   color: rgba(255, 255, 255, 0.85);
@@ -66,8 +66,7 @@
   height: auto;
   object-fit: contain;
   will-change: transform;
-  filter: drop-shadow(0 16px 60px rgba(0, 0, 0, 0.7))
-          drop-shadow(0 4px 16px rgba(139, 90, 43, 0.15));
+  filter: drop-shadow(0 16px 60px rgba(0, 0, 0, 0.7)) drop-shadow(0 4px 16px rgba(139, 90, 43, 0.15));
 }
 
 /* ── Mobile ─────────────────────────────────────────── */

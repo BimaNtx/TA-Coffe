@@ -20,7 +20,8 @@
   gap: 5rem;
   max-width: 1200px;
   margin: 0 auto;
-  align-items: stretch; /* kedua kolom otomatis sama tinggi */
+  align-items: stretch;
+  /* kedua kolom otomatis sama tinggi */
 }
 
 @media (max-width: 768px) {
@@ -37,14 +38,17 @@
   flex-direction: column;
   gap: 1.5rem;
   padding-top: 1rem;
-  position: relative; /* agar imageWrap bisa absolute jika perlu */
+  position: relative;
+  /* agar imageWrap bisa absolute jika perlu */
 }
 
 /* ── Editorial Image Wrap — mengisi sisa tinggi kolom kiri ── */
 
 .imageWrap {
-  flex: 1;            /* tumbuh mengisi ruang sisa */
-  min-height: 280px;  /* jaga minimum agar tidak terlalu gepeng */
+  flex: 1;
+  /* tumbuh mengisi ruang sisa */
+  min-height: 280px;
+  /* jaga minimum agar tidak terlalu gepeng */
   position: relative;
   overflow: hidden;
   margin-top: 1rem;
@@ -86,12 +90,10 @@
 }
 
 .heading {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Inter', sans-serif;
   font-size: clamp(2.8rem, 5vw, 4.5rem);
-  font-weight: 500;
+  font-weight: 800;
   color: #ffffff;
-  line-height: 1.05;
-  letter-spacing: 0.02em;
 }
 
 .subtext {
@@ -241,7 +243,8 @@
 /* Select takes most of the row width */
 .selectFlex {
   flex: 3;
-  width: auto; /* override .input width:100% */
+  width: auto;
+  /* override .input width:100% */
 }
 
 /* Quantity input: compact */
@@ -432,7 +435,8 @@
 
 .modalOverlay {
   position: fixed;
-  inset: 0;                             /* top/right/bottom/left = 0 */
+  inset: 0;
+  /* top/right/bottom/left = 0 */
   z-index: 1000;
   background-color: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(6px);
@@ -440,13 +444,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;                        /* padding agar tidak mentok di mobile */
+  padding: 1rem;
+  /* padding agar tidak mentok di mobile */
   animation: cfFadeIn 0.2s ease;
 }
 
 @keyframes cfFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* Kotak konten modal — tanpa border-radius */
@@ -466,8 +476,15 @@
 }
 
 @keyframes cfScaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Label kecil di atas judul */
