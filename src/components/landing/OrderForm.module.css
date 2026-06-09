@@ -94,6 +94,7 @@
   font-size: clamp(2.8rem, 5vw, 4.5rem);
   font-weight: 800;
   color: #ffffff;
+  line-height: 1.05;
 }
 
 .subtext {
